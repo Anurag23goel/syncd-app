@@ -1,0 +1,315 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ContactSelectionModal from "../../components/Modal/ContactSelectionModal";
+import { LocalSvg } from "react-native-svg/css";
+import { useLanguageStore } from "@/store/useLanguageStore";
+import { translations } from "@/constants/translations";
+
+interface ChatItem {
+  id: string;
+  name: string;
+  avatar: string;
+  timeAgo: string;
+  unreadCount?: number;
+  lastMessage?: string;
+}
+
+const chats: ChatItem[] = [
+  {
+    id: "1",
+    name: "Ronak Ahuja",
+    avatar: "https://i.pravatar.cc/100?img=1",
+    timeAgo: "6 hrs Ago",
+    unreadCount: 1,
+    lastMessage: "Perfect, I'll review it.",
+  },
+  {
+    id: "2",
+    name: "Orion Towers",
+    avatar: "https://i.pravatar.cc/100?img=2",
+    timeAgo: "7 hrs Ago",
+    unreadCount: 5,
+    lastMessage: "Meeting scheduled for tomorrow",
+  },
+  {
+    id: "3",
+    name: "Krish Parekh",
+    avatar: "https://i.pravatar.cc/100?img=3",
+    timeAgo: "8 hrs Ago",
+    unreadCount: 1,
+    lastMessage: "Documents have been shared",
+  },
+  {
+    id: "4",
+    name: "Amit Awasti",
+    avatar: "https://i.pravatar.cc/100?img=4",
+    timeAgo: "16 hrs Ago",
+    lastMessage: "Thanks for the update",
+  },
+  {
+    id: "5",
+    name: "Diya Jain",
+    avatar: "https://i.pravatar.cc/100?img=5",
+    timeAgo: "1 day Ago",
+    lastMessage: "Will check and get back",
+  },
+];
+
+export default function ChatScreen() {
+  const language = useLanguageStore((state) => state.language);
+  const t = translations[language].chat;
+
+  const [activeTab, setActiveTab] = useState("All");
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleTabPress = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "Groups") {
+      router.push("/chat/groupInfo");
+    }
+  };
+
+  const renderChatItem = (chat: ChatItem) => (
+    <TouchableOpacity
+      key={chat.id}
+      style={styles.chatItem}
+      onPress={() => router.push("/chat/id")}
+    >
+      <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+      <View style={styles.chatInfo}>
+        <View style={styles.chatHeader}>
+          <Text style={styles.chatName}>{chat.name}</Text>
+          <Text style={styles.timeAgo}>{chat.timeAgo}</Text>
+        </View>
+        <View style={styles.chatFooter}>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {chat.lastMessage}
+          </Text>
+          {chat.unreadCount ? (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadCount}>{chat.unreadCount}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const filteredChats = chats.filter((chat) =>
+    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t.chats}</Text>
+        <TouchableOpacity onPress={() => router.push("/notification")}>
+          <Ionicons name="notifications-outline" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="gray" />
+        <TextInput
+          placeholder={t.searchPlaceholder}
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        {[t.all, t.unread, t.groups].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+            onPress={() => handleTabPress(tab)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.activeTabText,
+              ]}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Chat List */}
+      <ScrollView style={styles.chatList} showsVerticalScrollIndicator={false}>
+        {filteredChats.map(renderChatItem)}
+      </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setModalVisible(true)}
+      >
+        <LocalSvg
+          asset={require("../../assets/images/AddChat.svg")}
+          width={24}
+          height={24}
+        />
+      </TouchableOpacity>
+
+      <ContactSelectionModal
+        visible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: "SFPro-Bold",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    fontFamily: "SFPro-Regular",
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    marginVertical: 8,
+    gap: 8,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    flex: 1,
+  },
+  activeTab: {
+    backgroundColor: "#007BFF",
+    borderColor: "#007BFF",
+  },
+  tabText: {
+    color: "#666",
+    fontSize: 14,
+    fontFamily: "SFPro-Regular",
+  },
+  activeTabText: {
+    color: "#fff",
+    fontFamily: "SFPro-Medium",
+  },
+  chatList: {
+    flex: 1,
+  },
+  chatItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  chatInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  chatHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  chatName: {
+    fontSize: 16,
+    fontFamily: "SFPro-Semibold",
+  },
+  timeAgo: {
+    fontSize: 12,
+    color: "#666",
+    fontFamily: "SFPro-Regular",
+  },
+  chatFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: "#666",
+    flex: 1,
+    fontFamily: "SFPro-Regular",
+  },
+  unreadBadge: {
+    backgroundColor: "#0060B0",
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    marginLeft: 8,
+  },
+  unreadCount: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "SFPro-Bold",
+  },
+  fab: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
+    backgroundColor: "#003B93",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+});
