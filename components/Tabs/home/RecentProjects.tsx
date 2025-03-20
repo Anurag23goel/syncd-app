@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
+import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { getAllUserProjects } from "@/services/project_other_user";
 
 const RecentProjects = () => {
   const language = useLanguageStore((state) => state.language);
@@ -21,6 +23,41 @@ const RecentProjects = () => {
     setToken(null);
     router.push("/(auth)");
   };
+
+  const [recentProjects, setRecentProjects] = useState<
+    ProjectDetailsResponse[] | null
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch all projects from the API
+  useEffect(() => {
+    const fetchRecentProjects = async () => {
+      try {
+        const authToken = useAuthStore.getState().token;
+
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
+
+        const response = await getAllUserProjects(authToken);
+
+        // Check if response contains the "projects" key and set state
+        if (response.data?.projects) {
+          setRecentProjects(response.data.projects.slice(0, 3).reverse()); // Update state with projects array
+        } else {
+          console.warn("No projects found in response.");
+          setRecentProjects([]); // Set empty array if no projects found
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchRecentProjects();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -42,35 +79,57 @@ const RecentProjects = () => {
         <TextInput placeholder={t.search} style={styles.searchInput} />
       </View>
       <Text style={styles.sectionTitle}>{t.recentProjects}</Text>
-      <View style={styles.projectCard}>
-        <Image
-          source={require("../../../assets/images/recent.png")}
-          style={styles.projectImage}
-        />
-        <Text style={styles.projectTitle}>Orion Towers</Text>
-        <Text style={styles.projectLocation}>
-          Karnataka, Bengaluru, Koramangala
-        </Text>
-        <View style={styles.infoContainer}>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>{t.workDone}</Text>
-            <Text style={styles.infoValueGreen}>10%</Text>
-          </View>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoLabel}>{t.deadline}</Text>
-            <Text style={styles.infoValueBlue}>November</Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: "#002347",
-                fontFamily: "SFPro-Regular",
-              }}
-            >
-              2024
+      {recentProjects && recentProjects.length > 0 ? (
+        recentProjects.map((project) => (
+          <View style={styles.projectCard} key={project.ProjectID}>
+            <Image
+              source={
+                project.ProjectThumbnail
+                  ? { uri: project.ProjectThumbnail }
+                  : require("../../../assets/images/recent.png")
+              }
+              style={styles.projectImage}
+            />
+            <Text style={styles.projectTitle}>{project.ProjectName}</Text>
+            <Text style={styles.projectLocation}>
+              {project.ProjectLocation || "Unknown Location"}
             </Text>
+            <View style={styles.infoContainer}>
+              <View style={styles.infoBox}>
+                <Text style={styles.infoLabel}>{t.workDone}</Text>
+                <Text style={styles.infoValueGreen}>10%</Text>
+              </View>
+              <View style={styles.infoBox}>
+                <Text style={styles.infoLabel}>{t.deadline}</Text>
+                <Text style={styles.infoValueBlue}>
+
+                {
+                  project.EndDate
+                    ? new Date(project.EndDate).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "Unknown Deadline"
+                }
+
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#002347",
+                    fontFamily: "SFPro-Regular",
+                  }}
+                >
+                  2024
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
+        ))
+      ) : (
+        <Text>No Projects</Text>
+      )}
     </View>
   );
 };

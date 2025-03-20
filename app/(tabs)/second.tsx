@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,21 +14,28 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { getAllUserProjects } from "@/services/project_other_user";
+import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { useAuthStore } from "@/store/authStore";
 
 interface ProjectCardProps {
   title: string;
   location: string;
+  imgSrc:string
   handleClick: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   title,
   location,
+  imgSrc,
   handleClick,
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <Image
-      source={require("../../assets/images/recent.png")}
+      source={imgSrc
+        ? { uri: imgSrc }
+        : require("../../assets/images/recent.png")}
       style={styles.projectImage}
     />
     <View style={styles.cardContent}>
@@ -41,6 +48,40 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 const FileSpaceScreen: React.FC = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs;
+
+  const [allProjects, setAllProjects] = useState<
+    ProjectDetailsResponse[] | null
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch all projects from the API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const authToken = useAuthStore.getState().token;
+
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
+
+        const response = await getAllUserProjects(authToken);
+
+        // Check if response contains the "projects" key and set state
+        if (response.data?.projects) {
+          setAllProjects(response.data.projects); // ✅ Update state with projects array
+        } else {
+          console.warn("No projects found in response.");
+          setAllProjects([]); // Set empty array if no projects found
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,22 +100,16 @@ const FileSpaceScreen: React.FC = () => {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ProjectCard
-          title="Orion Towers"
-          location="Karnataka, Bengaluru, Koramangala"
-          handleClick={() => router.push("/file")}
-        />
-        <ProjectCard
-          title="Cosmos Crest"
-          location="Maharashtra, Mumbai, Bandra"
-          handleClick={() => router.push("/file")}
-        />
-        <ProjectCard
-          title="Skyline Enclave"
-          location="Delhi, New Delhi, Chanakyapuri"
-          handleClick={() => router.push("/file")}
-        />
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {allProjects?.map((project) => (
+          <ProjectCard
+            key={project.ProjectID}
+            title={project.ProjectName}
+            imgSrc={project.ProjectThumbnail || ""}
+            location={project.ProjectLocation}
+            handleClick={() => router.push(`/file`)}
+          />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

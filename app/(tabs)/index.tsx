@@ -7,7 +7,6 @@ import TodaysReminders from "@/components/Tabs/home/TodaysReminders";
 import { FlatList } from "react-native";
 import { AddIcon } from "@/components/navigation/Icons";
 import OptionModal from "@/components/Modal/OptionModal";
-import GaugeChart from "@/components/Chart/GaugeChart";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 

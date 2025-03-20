@@ -121,12 +121,16 @@ import {
    * @returns List of tasks
    */
   export async function getTasks(
-    projectId: string
+    projectId: string,
+    authToken: string
   ): Promise<ApiSuccessResponse<TasksListResponse>> {
     try {
       const { data } = await axiosInstance.get<ApiResponse<TasksListResponse>>(
         API_ROUTES.TASK.GET_TASK,
         {
+          headers:{
+            authToken: authToken
+          },
           params: { ProjectID: projectId }, // ✅ Sending ProjectID in query params
         }
       );
@@ -156,7 +160,7 @@ import {
   
       return {
         message: data.message,
-        data: data.data as any,
+        data: data as any,
       };
     } catch (error) {
       throw error;

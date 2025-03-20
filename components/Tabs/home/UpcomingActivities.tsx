@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,10 @@ import MeetingModal from "@/components/Modal/CreateMeeting";
 import Filter_Calendar from "./Filter_Calendar";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { MeetingResponse, TaskResponse } from "@/types/Apitypes";
+import { useAuthStore } from "@/store/authStore";
+import { getUserMeetings } from "@/services/meetings";
+import { getTasks } from "@/services/task";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -139,35 +143,54 @@ const UpcomingActivities: React.FC = () => {
   const openTaskModal = () => setTaskModalVisible(true);
   const closeTaskModal = () => setTaskModalVisible(false);
 
-  const meetingsData = [
-    {
-      id: "m1",
-      title: "Cosmos Crest Design Review",
-      description:
-        "Focused discussion on finalizing interior layouts and material selections.",
-      time: "8:15 AM",
-      attendees: [
-        require("../../../assets/images/assets/person1.png"),
-        require("../../../assets/images/assets/person2.png"),
-        require("../../../assets/images/assets/person3.png"),
-      ],
-      borderColor: "#E74C3C",
-      meetIcon: require("../../../assets/images/assets/meet.png"),
-    },
-    {
-      id: "m2",
-      title: "Skyline Enclave Status Meeting",
-      description:
-        "Discussion on overall project progress and upcoming deadlines.",
-      time: "2:00 PM",
-      attendees: [
-        require("../../../assets/images/assets/person1.png"),
-        require("../../../assets/images/assets/person2.png"),
-      ],
-      borderColor: "#3498DB",
-      meetIcon: require("../../../assets/images/assets/ms.png"),
-    },
-  ];
+  const [meetingsData, setMeetingsData] = useState<MeetingResponse[]>([]);
+  const [tasks, setTasksData] = useState<TaskResponse[]>([]);
+
+  // FETCHING MEETINGS DATA
+  useEffect(() => {
+    const fetchMeetingsData = async () => {
+      const authToken = useAuthStore.getState().token;
+
+      if (!authToken) {
+        console.error("No auth token found!");
+        return;
+      }
+
+      try {
+        const response = await getUserMeetings(authToken);
+
+        setMeetingsData(response.data?.data);
+      } catch (error) {
+        console.error("Error fetching meetings:", error);
+      }
+    };
+    fetchMeetingsData();
+  },[]);
+
+  // FETCHING TASKS DATA
+  // useEffect(() => {
+  //   const fetchTasksData = async () => {
+  //     const authToken = useAuthStore.getState().token;
+
+  //     if (!authToken) {
+  //       console.error("No auth token found!");
+  //       return;
+  //     }
+
+  //     try {
+  //       const response = await getTasks( "", authToken);
+
+  //       setTasksData(response.data?.data);
+  //     } catch (error) {
+  //       console.error("Error fetching meetings:", error);
+  //     }
+  //   };
+  //   fetchTasksData();
+  // },[]);
+
+  
+
+  
 
   const tasksData = [
     { id: "1", title: "Task 1", completed: false },
@@ -183,12 +206,16 @@ const UpcomingActivities: React.FC = () => {
 
   const renderMeetingItem = ({ item }: { item: (typeof meetingsData)[0] }) => (
     <ActivityCard
-      title={item.title}
-      description={item.description}
-      time={item.time}
-      attendees={item.attendees}
-      borderColor={item.borderColor}
-      meetIcon={item.meetIcon}
+      title={item.Title}
+      description={item.Description}
+      time={item.StartTime}
+      attendees={item.Participants}
+      borderColor={"#E0E0E0"}
+      meetIcon={{
+        width: 16,
+        height: 16,
+        marginRight: 6
+      }}
     />
   );
 
@@ -247,7 +274,7 @@ const UpcomingActivities: React.FC = () => {
         {activeTab === "Meetings" ? (
           <FlatList
             data={meetingsData}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(meeting) => meeting.MeetingID}
             renderItem={renderMeetingItem}
             ListFooterComponent={
               <TouchableOpacity style={styles.addButton} onPress={openModal}>

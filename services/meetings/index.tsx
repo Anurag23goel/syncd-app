@@ -82,14 +82,15 @@ import {
         API_ROUTES.MEETING.GET_USER_MEETING,
         {
           headers: {
-            Authorization: `Bearer ${authToken}`, // ✅ Sending auth token in header
+            authToken: authToken, // Sending auth token in header
           },
         }
       );
+      
   
       return {
         message: data.message,
-        data: data.data as any,
+        data: data as any,
       };
     } catch (error) {
       throw error;

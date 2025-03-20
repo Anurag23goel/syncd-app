@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,21 +14,28 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useAuthStore } from "@/store/authStore";
+import { getAllUserProjects } from "@/services/project_other_user";
+import { ProjectDetailsResponse } from "@/types/Apitypes";
 
 interface InventoryCardProps {
   title: string;
   location: string;
+  imgSrc: string;
   handleClick: () => void;
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
   title,
   location,
+  imgSrc,
   handleClick,
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <Image
-      source={require("../../../assets/images/recent.png")}
+      source={imgSrc
+        ? { uri: imgSrc }
+        : require("../../../assets/images/recent.png")}
       style={styles.projectImage}
     />
     <View style={styles.cardContent}>
@@ -41,6 +48,36 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 const FileSpaceScreen: React.FC = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].inventory;
+
+  const [inventoryProjects, setInventoryProjects] = useState<
+    ProjectDetailsResponse[] | null
+  >([]);
+  useEffect(() => {
+    const fetchRecentProjects = async () => {
+      try {
+        const authToken = useAuthStore.getState().token;
+
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
+
+        const response = await getAllUserProjects(authToken);
+
+        // Check if response contains the "projects" key and set state
+        if (response.data?.projects) {
+          setInventoryProjects(response.data.projects); // Update state with projects array
+        } else {
+          console.warn("No projects found in response.");
+          setInventoryProjects([]); // Set empty array if no projects found
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchRecentProjects();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,22 +96,16 @@ const FileSpaceScreen: React.FC = () => {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <InventoryCard
-          title={t.projects.orionTowers}
-          location={t.projects.location.bangalore}
-          handleClick={() => router.push("/log/inventory/resource")}
-        />
-        <InventoryCard
-          title={t.projects.cosmosCrest}
-          location={t.projects.location.mumbai}
-          handleClick={() => router.push("/log/inventory/resource")}
-        />
-        <InventoryCard
-          title={t.projects.skylineEnclave}
-          location={t.projects.location.delhi}
-          handleClick={() => router.push("/log/inventory/resource")}
-        />
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {inventoryProjects?.map((project) => (
+          <InventoryCard
+            key={project.ProjectID}
+            title={project.ProjectName}
+            imgSrc={project.ProjectThumbnail || ""}
+            location={project.ProjectLocation || "Unknown Location"}
+            handleClick={() => router.push(`/log/inventory/resource`)}
+          />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

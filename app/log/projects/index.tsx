@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { AddIcon } from "@/components/navigation/Icons";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { ProjectDetailsResponse, ProjectResponse } from "@/types/Apitypes";
+import { getAllUserProjects } from "@/services/project_other_user";
+import { useAuthStore } from "@/store/authStore";
 
 interface InventoryCardProps {
   title: string;
@@ -28,12 +31,17 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   title,
   location,
   handleClick,
+  imgSrc,
   isCompleted,
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <View style={{ flexDirection: "row" }}>
       <Image
-        source={require("../../../assets/images/recent.png")}
+        source={
+          imgSrc
+            ? { uri: imgSrc }
+            : require("../../../assets/images/recent.png")
+        }
         style={styles.projectImage}
       />
       <View style={styles.cardContent}>
@@ -125,25 +133,34 @@ const ProjectScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Active");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.projects;
+  const [projects, setProjectsData] = useState<ProjectDetailsResponse[]>([]);
 
-  // Sample project data
-  const projects = [
-    {
-      title: "Orion Towers",
-      location: "Karnataka, Bengaluru, Koramangala",
-      isCompleted: false,
-    },
-    {
-      title: "Cosmos Crest",
-      location: "Maharashtra, Mumbai, Bandra",
-      isCompleted: true,
-    },
-    {
-      title: "Skyline Enclave",
-      location: "Delhi, New Delhi, Chanakyapuri",
-      isCompleted: true,
-    },
-  ];
+  useEffect(() => {
+    const fetchRecentProjects = async () => {
+      try {
+        const authToken = useAuthStore.getState().token;
+
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
+
+        const response = await getAllUserProjects(authToken);
+
+        // Check if response contains the "projects" key and set state
+        if (response.data?.projects) {
+          setProjectsData(response.data?.projects); // Update state with projects array
+        } else {
+          console.warn("No projects found in response.");
+          setProjectsData([]); // Set empty array if no projects found
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchRecentProjects();
+  }, []);
 
   const filteredProjects = projects.filter((project) => {
     if (activeTab === "Active") return !project.isCompleted;
@@ -190,11 +207,12 @@ const ProjectScreen: React.FC = () => {
       {/* Projects List */}
       <Text style={styles.headerTitle}>{t.projectsList}</Text>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {filteredProjects.map((project, index) => (
+        {filteredProjects.map((project) => (
           <InventoryCard
-            key={index}
-            title={project.title}
-            location={project.location}
+            key={project.ProjectID}
+            title={project.ProjectName}
+            location={project.ProjectLocation}
+            imgSrc={project.ProjectThumbnail}
             handleClick={() => router.push("/log/projects/id")}
             isCompleted={project.isCompleted && activeTab === "Completed"}
           />

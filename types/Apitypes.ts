@@ -199,8 +199,21 @@ export interface AddUserToProjectPayload {
 export interface ProjectDetailsResponse {
   ProjectID: string;
   ProjectName: string;
-  Description: string;
-  CreatedAt: string;
+  ProjectDescription: string;
+  ProjectCode: string;
+  ProjectArea: string;
+  Budget: number | null;
+  Currency: string | null;
+  StartDate: string;
+  EndDate: string | null;
+  ProjectLocation: string;
+  ProjectMapLink: string | null;
+  ProjectThumbnail: string | null;
+  ProjectAdminIDs: string[]; // Assuming this is an array of admin IDs
+  ProjectMembers: string[]; // Assuming an array of member IDs
+  userPermissions: string[]; // Assuming this contains user permissions
+  isAdmin: boolean;
+  isCompleted: boolean;
 }
 
 /**
@@ -715,18 +728,18 @@ export interface MeetingResponse {
   MeetingID: string;
   Title: string;
   Description: string;
-  Date: string;
-  StartTime: string;
-  EndTime: string;
-  MeetingType: string;
-  MeetingPlatform: string;
-  MeetingLink: string | null;
-  Location: string | null;
-  Participants: string[];
-  TeamIDs: string[];
-  CreatedBy: string;
-  CreatedAt: string;
-  UpdatedAt: string;
+  Date: string; // Format: "YYYY-MM-DD"
+  StartTime: string; // ISO timestamp "2025-03-20T10:00:00.000Z"
+  EndTime: string; // ISO timestamp "2025-03-20T11:30:00.000Z"
+  MeetingType: string; // Example: "VIRTUAL"
+  MeetingPlatform: string; // Example: "GMEET"
+  MeetingLink: string | null; // Can be null if it's an offline meeting
+  Location: string | null; // Null for virtual meetings, a string for physical ones
+  Participants: string[]; // Array of user IDs
+  TeamIDs: string[]; // Array of team IDs
+  CreatedBy: string; // User ID of the meeting creator
+  createdAt: string; // API returns lowercase `createdAt`
+  updatedAt: string; // API returns lowercase `updatedAt`
 }
 
 /**
