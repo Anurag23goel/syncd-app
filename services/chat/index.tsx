@@ -8,12 +8,6 @@ import {
 import axiosInstance from "../index";
 import { API_ROUTES } from "../routes.config";
 
-/**
- * Create a new chat room
- * @param authToken - User authentication token
- * @param chatRoomData - Chat room creation payload
- * @returns ChatRoomResponse
- */
 export async function createChatRoom(
   authToken: string,
   chatRoomData: CreateChatRoomPayload
@@ -24,7 +18,7 @@ export async function createChatRoom(
       chatRoomData,
       {
         headers: {
-          Authorization: `Bearer ${authToken}`, // ✅ Sending auth token in header
+          authToken: authToken, // ✅ Sending auth token in header
         },
       }
     );
@@ -37,43 +31,60 @@ export async function createChatRoom(
     throw error;
   }
 }
-
-/**
- * Search for users
- * @param authToken - User authentication token
- * @param query - Search query (username or other criteria)
- * @returns List of users
- */
 export async function searchUser(
   authToken: string,
   query: string
 ): Promise<ApiSuccessResponse<SearchUserResponse[]>> {
+  console.log(query);
+  
   try {
     const { data } = await axiosInstance.get<ApiResponse<SearchUserResponse[]>>(
-      API_ROUTES.CHAT.SEARCH_USER,
+      API_ROUTES.CHAT.SEARCH_USER.replace("{{query}}", query),
       {
-        params: { query }, // ✅ Sending search query as query param
+        params: { query }, // Sending search query as query param
         headers: {
-          Authorization: `Bearer ${authToken}`, // ✅ Sending auth token in header
+          authToken: authToken, // Sending auth token in header
         },
       }
     );
 
     return {
       message: data.message,
-      data: data.data as any,
+      data: data as any,
     };
   } catch (error) {
     throw error;
   }
 }
 
-export async function fetchUserChats(
+export async function fetchUserAllChats(
   authToken: string
 ): Promise<ApiSuccessResponse<ChatRoomResponse[]>> {
   try {
     const { data } = await axiosInstance.get<ApiResponse<ChatRoomResponse[]>>(
-      API_ROUTES.CHAT.FETCH_USER_CHATS,
+      API_ROUTES.CHAT.FETCH_USER_ALL_CHATS,
+      {
+        headers: {
+          authToken: authToken,
+        },
+      }
+    );
+
+    return {
+      message: data.message,
+      data: data as any,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function fetchUserParticularChat(
+  authToken: string
+): Promise<ApiSuccessResponse<ChatRoomResponse[]>> {
+  try {
+    const { data } = await axiosInstance.get<ApiResponse<ChatRoomResponse[]>>(
+      API_ROUTES.CHAT.FETCH_CHAT_ROOM,
       {
         headers: {
           authToken: authToken,

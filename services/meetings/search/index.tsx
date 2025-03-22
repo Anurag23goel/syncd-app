@@ -24,14 +24,14 @@ import {
         {
           params: { query }, // ✅ Sending search query as query param
           headers: {
-            Authorization: `Bearer ${authToken}`, // ✅ Sending auth token in header
+            authToken: authToken, // ✅ Sending auth token in header
           },
         }
       );
   
       return {
         message: data.message,
-        data: data.data as any,
+        data: data as any,
       };
     } catch (error) {
       throw error;

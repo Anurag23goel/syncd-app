@@ -4,10 +4,9 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
+  FlatList,
   Image,
   TouchableOpacity,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -16,99 +15,42 @@ import ContactSelectionModal from "../../components/Modal/ContactSelectionModal"
 import { LocalSvg } from "react-native-svg/css";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
-import { fetchUserChats } from "@/services/chat";
+import { fetchUserAllChats } from "@/services/chat";
 import { useAuthStore } from "@/store/authStore";
-import { ChatRoomResponse } from "@/types/Apitypes";
-
-interface ChatItem {
-  id: string;
-  name: string;
-  avatar: string;
-  timeAgo: string;
-  unreadCount?: number;
-  lastMessage?: string;
-}
-
-const chats: ChatItem[] = [
-  {
-    id: "1",
-    name: "Ronak Ahuja",
-    avatar: "https://i.pravatar.cc/100?img=1",
-    timeAgo: "6 hrs Ago",
-    unreadCount: 1,
-    lastMessage: "Perfect, I'll review it.",
-  },
-  {
-    id: "2",
-    name: "Orion Towers",
-    avatar: "https://i.pravatar.cc/100?img=2",
-    timeAgo: "7 hrs Ago",
-    unreadCount: 5,
-    lastMessage: "Meeting scheduled for tomorrow",
-  },
-  {
-    id: "3",
-    name: "Krish Parekh",
-    avatar: "https://i.pravatar.cc/100?img=3",
-    timeAgo: "8 hrs Ago",
-    unreadCount: 1,
-    lastMessage: "Documents have been shared",
-  },
-  {
-    id: "4",
-    name: "Amit Awasti",
-    avatar: "https://i.pravatar.cc/100?img=4",
-    timeAgo: "16 hrs Ago",
-    lastMessage: "Thanks for the update",
-  },
-  {
-    id: "5",
-    name: "Diya Jain",
-    avatar: "https://i.pravatar.cc/100?img=5",
-    timeAgo: "1 day Ago",
-    lastMessage: "Will check and get back",
-  },
-];
+import { ChatRoom } from "@/types/Apitypes";
 
 export default function ChatScreen() {
   const language = useLanguageStore((state) => state.language);
-  // const authToken = useAuthStore.getState().token;
+  const authToken = useAuthStore.getState().token;
   const t = translations[language].chat;
 
   const [activeTab, setActiveTab] = useState("All");
   const [isModalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [chats, setChats] = useState<ChatRoomResponse[]>([]);
-  // const [loading, setLoading] = useState(false);
+  const [defaultChats, setDefaultChats] = useState<ChatRoom[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   const delayDebounce = setTimeout(() => {
-  //     if (searchQuery.trim().length > 0) {
-  //       fetchChats(searchQuery);
-  //     } else {
-  //       setChats([]); // or fetch all chats if desired
-  //     }
-  //   }, 500); // debounce input to avoid too many API calls
+  useEffect(() => {
+    const fetchAllChatsForDefaultScreen = async () => {
+      try {
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
 
-  //   return () => clearTimeout(delayDebounce);
-  // }, [searchQuery]);
+        setLoading(true);
+        const response = await fetchUserAllChats(authToken);
+        const chats: ChatRoom[] = response.data?.chatRooms || [];
+        setDefaultChats(chats);
+      } catch (error) {
+        console.error("Error fetching chats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // const fetchChats = async (query: string) => {
-  //   try {
-  //     if (!authToken) {
-  //       console.error("No auth token found!");
-  //       return;
-  //     }
-
-  //     setLoading(true);
-  //     const response = await fetchUserChats(authToken);
-  //     console.log(response.data);
-  //   } catch (error) {
-  //     console.error("Error fetching chats:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    fetchAllChatsForDefaultScreen();
+  }, []);
 
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
@@ -117,34 +59,40 @@ export default function ChatScreen() {
     }
   };
 
-  const renderChatItem = (chat: ChatItem) => (
+  const renderChatItem = (chat: ChatRoom) => (
     <TouchableOpacity
-      key={chat.id}
       style={styles.chatItem}
-      onPress={() => router.push("/chat/id")}
+      onPress={() => router.push(`/chat/${chat.RoomID}`)}
     >
-      <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+      <Image
+        source={{
+          uri: chat.DisplayPicture || "https://via.placeholder.com/100",
+        }}
+        style={styles.avatar}
+      />
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
-          <Text style={styles.chatName}>{chat.name}</Text>
-          <Text style={styles.timeAgo}>{chat.timeAgo}</Text>
+          <Text style={styles.chatName}>{chat.DisplayName}</Text>
+          <Text style={styles.timeAgo}>
+            {new Date(chat.LastMessage.CreatedAt).toLocaleTimeString()}
+          </Text>
         </View>
         <View style={styles.chatFooter}>
           <Text style={styles.lastMessage} numberOfLines={1}>
-            {chat.lastMessage}
+            {chat.LastMessage.Content}
           </Text>
-          {chat.unreadCount ? (
+          {chat.UnreadCount > 0 && (
             <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>{chat.unreadCount}</Text>
+              <Text style={styles.unreadCount}>{chat.UnreadCount}</Text>
             </View>
-          ) : null}
+          )}
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  const filteredChats = chats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredChats = defaultChats.filter((chat) =>
+    chat.DisplayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -189,9 +137,26 @@ export default function ChatScreen() {
       </View>
 
       {/* Chat List */}
-      <ScrollView style={styles.chatList} showsVerticalScrollIndicator={false}>
-        {filteredChats.map(renderChatItem)}
-      </ScrollView>
+      <FlatList
+        data={filteredChats}
+        keyExtractor={(item) => item.RoomID}
+        renderItem={({ item }) => renderChatItem(item)}
+        contentContainerStyle={styles.chatList}
+        showsVerticalScrollIndicator={false}
+        refreshing={loading}
+        onRefresh={() => {
+          setSearchQuery(""); // clear search on pull refresh
+          // re-trigger effect logic
+          setDefaultChats([]);
+          setTimeout(() => {
+            if (authToken)
+              fetchUserAllChats(authToken).then((res) => {
+                const chats: ChatRoom[] = res.data?.chatRooms || [];
+                setDefaultChats(chats);
+              });
+          }, 300);
+        }}
+      />
 
       {/* Floating Action Button */}
       <TouchableOpacity

@@ -214,15 +214,11 @@ export interface ProjectDetailsResponse {
   userPermissions: string[]; // Assuming this contains user permissions
   isAdmin: boolean;
   IsCompleted: boolean;
-  progress:{
-    percentage:number;
-    completedMilestones: number,
-    totalMilestones: number
-  }
-}
-
-export interface AllProjectsResponse {
-  projects: ProjectDetailsResponse[];
+  progress: {
+    percentage: number;
+    completedMilestones: number;
+    totalMilestones: number;
+  };
 }
 
 /**
@@ -548,20 +544,47 @@ export interface CreateChatRoomPayload {
  * Type for a chat room response
  */
 export interface ChatRoomResponse {
-  RoomID: string;
-  RoomType: "GROUP" | "DIRECT";
-  RoomName: string;
-  Members: string[];
-  CreatedAt: string;
+  success: boolean;
+  filter: string;
+  chatRooms: ChatRoom[];
+  totalCount: number;
+  unreadTotal: number;
 }
+
+export interface ChatRoom {
+  RoomID: string;
+  RoomName: string;
+  DisplayName: string;
+  DisplayPicture: string | null;
+  RoomType: "DIRECT" | "GROUP";
+  UnreadCount: number;
+  LastMessage: LastMessage;
+  Members: ChatMember[];
+}
+
+export interface LastMessage {
+  Content: string;
+  SenderID: string;
+  CreatedAt: string; // ISO date string
+}
+
+export interface ChatMember {
+  UserID: string;
+  UserFullName: string;
+  UserProfilePicture: string | null;
+  IsCurrentUser: boolean;
+}
+
 
 /**
  * Type for searching users
  */
 export interface SearchUserResponse {
   UserID: string;
-  Username: string;
-  Email: string;
+  UserFullName: string;
+  UserEmail: string;
+  UserContact: string | null;
+  UserProfilePicture: string | null;
 }
 
 /**

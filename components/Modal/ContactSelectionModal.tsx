@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,26 +9,24 @@ import {
   Modal,
   Image,
   SafeAreaView,
-  Platform,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
-
-interface Contact {
-  id: number;
-  name: string;
-  number: string;
-  selected: boolean;
-  image: string;
-}
+import { useAuthStore } from "@/store/authStore";
+import { searchUser } from "@/services/chat";
+import { SearchUserResponse } from "@/types/Apitypes";
 
 interface ContactSelectionModalProps {
   visible: boolean;
   onClose: () => void;
 }
+
+// Extended user type with selection state
+type SelectableContact = SearchUserResponse & { selected: boolean };
 
 const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
   visible,
@@ -37,88 +35,62 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].contactSelection;
 
-  const [contacts, setContacts] = useState<Contact[]>([
-    {
-      id: 1,
-      name: "Aryan Singh",
-      number: "9876543210",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=1",
-    },
-    {
-      id: 2,
-      name: "Neha Sharma",
-      number: "8765432109",
-      selected: true,
-      image: "https://i.pravatar.cc/100?img=2",
-    },
-    {
-      id: 3,
-      name: "Rahul Kumar",
-      number: "7654321098",
-      selected: true,
-      image: "https://i.pravatar.cc/100?img=3",
-    },
-    {
-      id: 4,
-      name: "Priya Patel",
-      number: "6543210987",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=4",
-    },
-    {
-      id: 5,
-      name: "Vihaan Singh",
-      number: "4321098765",
-      selected: true,
-      image: "https://i.pravatar.cc/100?img=5",
-    },
-    {
-      id: 6,
-      name: "Aarav Singh",
-      number: "3210987654",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=6",
-    },
-    {
-      id: 7,
-      name: "Anaya Singh",
-      number: "2109876543",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=7",
-    },
-    {
-      id: 8,
-      name: "Aarav Singh",
-      number: "1098765432",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=8",
-    },
-    {
-      id: 9,
-      name: "Anaya Singh",
-      number: "0987654321",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=9",
-    },
-    {
-      id: 10,
-      name: "Aarav Singh",
-      number: "9876543210",
-      selected: false,
-      image: "https://i.pravatar.cc/100?img=10",
-    },
-  ]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isGroupView, setIsGroupView] = useState(false); // Toggle between views
+  const [isGroupView, setIsGroupView] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
   const [groupImage, setGroupImage] = useState<string | null>(null);
+  const authToken = useAuthStore.getState().token;
+  const [contacts, setContacts] = useState<SelectableContact[]>([]);
 
-  const toggleSelection = (id: number) => {
-    setContacts((prevContacts) =>
-      prevContacts.map((contact) =>
-        contact.id === id
+  // Load contacts based on search
+  useEffect(() => {
+    if (!authToken) return;
+  
+    const fetchSearchedContacts = async (query: string) => {
+      try {
+        const response = await searchUser(authToken, query); // search by query
+        const users = response.data?.users || [];
+        const selectableContacts: SelectableContact[] = users.map((user) => ({
+          ...user,
+          selected: false,
+        }));
+        setContacts(selectableContacts);
+      } catch (error: any) {
+        console.log("Search error:", error.message);
+      }
+    };
+  
+    // const fetchAllContacts = async () => {
+    //   try {
+    //     const response = await fetchAllUsers(authToken); // your API for all users
+    //     const users = response.data?.users || [];
+    //     const selectableContacts: SelectableContact[] = users.map((user) => ({
+    //       ...user,
+    //       selected: false,
+    //     }));
+    //     setContacts(selectableContacts);
+    //   } catch (error: any) {
+    //     console.log("Fetch all contacts error:", error.message);
+    //   }
+    // };
+  
+    const delayDebounce = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        fetchSearchedContacts(searchQuery.trim());
+      } else {
+        // fetchAllContacts(); // <-- different API call when no search query
+      }
+    }, 500);
+  
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+  
+
+  const toggleSelection = (userID: string) => {
+    setContacts((prev) =>
+      prev.map((contact) =>
+        contact.UserID === userID
           ? { ...contact, selected: !contact.selected }
           : contact
       )
@@ -127,7 +99,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Corrected property
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -138,30 +110,35 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
     }
   };
 
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const selectedContacts = contacts.filter((contact) => contact.selected);
+  const selectedContacts = contacts.filter((c) => c.selected);
 
   const handleCreateGroup = () => {
-    if (!groupName.trim()) {
-      // Show error or alert
-      return;
-    }
-    // Handle group creation
+    if (!groupName.trim()) return;
+
+    console.log("Creating group with:", {
+      name: groupName,
+      description: groupDescription,
+      members: selectedContacts,
+      image: groupImage,
+    });
+
     onClose();
   };
 
-  const renderContact = ({ item }: { item: Contact }) => (
+  const renderContact = ({ item }: { item: SelectableContact }) => (
     <TouchableOpacity
       style={styles.contactRow}
-      onPress={() => toggleSelection(item.id)}
+      onPress={() => toggleSelection(item.UserID)}
     >
-      <Image source={{ uri: item.image }} style={styles.contactImage} />
+      <Image
+        source={{
+          uri: item.UserProfilePicture || "https://via.placeholder.com/50",
+        }}
+        style={styles.contactImage}
+      />
       <View style={styles.contactInfo}>
-        <Text style={styles.contactName}>{item.name}</Text>
-        <Text style={styles.contactNumber}>{item.number}</Text>
+        <Text style={styles.contactName}>{item.UserFullName}</Text>
+        <Text style={styles.contactNumber}>{item.UserEmail}</Text>
       </View>
       {item.selected ? (
         <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
@@ -181,14 +158,10 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
           ]}
         >
           {!isGroupView ? (
-            // Contact Selection Screen
             <>
               <View style={styles.header}>
                 <Text style={styles.headerText}>{t.selectContacts}</Text>
-                <TouchableOpacity
-                  onPress={onClose}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
+                <TouchableOpacity onPress={onClose}>
                   <Feather name="x" size={24} color="#000" />
                 </TouchableOpacity>
               </View>
@@ -203,9 +176,9 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
                 />
               </View>
               <FlatList
-                data={filteredContacts}
+                data={contacts}
                 renderItem={renderContact}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item.UserID}
                 contentContainerStyle={styles.contactList}
                 showsVerticalScrollIndicator={false}
               />
@@ -225,7 +198,6 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
               )}
             </>
           ) : (
-            // Group Creation Screen
             <View style={styles.groupContainer}>
               <View style={styles.header}>
                 <TouchableOpacity
@@ -282,13 +254,17 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
                   style={styles.membersListContainer}
                 >
                   {selectedContacts.map((contact) => (
-                    <View key={contact.id} style={styles.memberItem}>
+                    <View key={contact.UserID} style={styles.memberItem}>
                       <Image
-                        source={{ uri: contact.image }}
+                        source={{
+                          uri:
+                            contact.UserProfilePicture ||
+                            "https://via.placeholder.com/50",
+                        }}
                         style={styles.memberImage}
                       />
                       <Text style={styles.memberName} numberOfLines={1}>
-                        {contact.name}
+                        {contact.UserFullName}
                       </Text>
                     </View>
                   ))}

@@ -25,7 +25,7 @@ import {
         meetingData,
         {
           headers: {
-            Authorization: `Bearer ${authToken}`, // ✅ Sending auth token in header
+            authToken: authToken, // ✅ Sending auth token in header
           },
         }
       );
