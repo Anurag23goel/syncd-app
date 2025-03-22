@@ -213,15 +213,18 @@ export interface ProjectDetailsResponse {
   ProjectMembers: string[]; // Assuming an array of member IDs
   userPermissions: string[]; // Assuming this contains user permissions
   isAdmin: boolean;
-  isCompleted: boolean;
+  IsCompleted: boolean;
+  progress:{
+    percentage:number;
+    completedMilestones: number,
+    totalMilestones: number
+  }
 }
 
 /**
  * Type for listing projects
  */
-export interface ProjectsListResponse {
-  projects: ProjectDetailsResponse[];
-}
+
 
 /**
  * Type for listing permissions

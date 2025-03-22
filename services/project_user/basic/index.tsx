@@ -3,7 +3,6 @@ import {
   ApiSuccessResponse,
   AddUserToProjectPayload,
   ProjectDetailsResponse,
-  ProjectsListResponse,
   PermissionsListResponse,
   UsersListResponse,
 } from "@/types/Apitypes";
@@ -15,10 +14,10 @@ import { API_ROUTES } from "../../routes.config";
  * @returns List of projects
  */
 export async function getAllProjects(): Promise<
-  ApiSuccessResponse<ProjectsListResponse>
+  ApiSuccessResponse<ProjectDetailsResponse[]>
 > {
   try {
-    const { data } = await axiosInstance.get<ApiResponse<ProjectsListResponse>>(
+    const { data } = await axiosInstance.get<ApiResponse<ProjectDetailsResponse[]>>(
       API_ROUTES.PROJECT_MAIN_USER.BASIC.GET_ALL_PROJECTS
     );
 

@@ -24,7 +24,8 @@ interface InventoryCardProps {
   title: string;
   location: string;
   handleClick: () => void;
-  isCompleted?: boolean; // New prop to check if it's in the Completed tab
+  imgSrc?: string;
+  IsCompleted?: boolean; // New prop to check if it's in the Completed tab
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
@@ -32,7 +33,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   location,
   handleClick,
   imgSrc,
-  isCompleted,
+  IsCompleted,
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <View style={{ flexDirection: "row" }}>
@@ -51,7 +52,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
     </View>
 
     {/* Badge */}
-    {isCompleted ? (
+    {IsCompleted ? (
       <View
         style={{
           backgroundColor: "#3498DB",
@@ -98,7 +99,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
     )}
 
     {/* Feedback Section */}
-    {isCompleted && (
+    {IsCompleted && (
       <TouchableOpacity
         style={{
           flexDirection: "row",
@@ -163,8 +164,8 @@ const ProjectScreen: React.FC = () => {
   }, []);
 
   const filteredProjects = projects.filter((project) => {
-    if (activeTab === "Active") return !project.isCompleted;
-    if (activeTab === "Completed") return project.isCompleted;
+    if (activeTab === "Active") return !project.IsCompleted;
+    if (activeTab === "Completed") return project.IsCompleted;
     return true; // Upcoming or other tabs
   });
 
@@ -212,9 +213,9 @@ const ProjectScreen: React.FC = () => {
             key={project.ProjectID}
             title={project.ProjectName}
             location={project.ProjectLocation}
-            imgSrc={project.ProjectThumbnail}
+            imgSrc={project.ProjectThumbnail || ""}
             handleClick={() => router.push("/log/projects/id")}
-            isCompleted={project.isCompleted && activeTab === "Completed"}
+            IsCompleted={project.IsCompleted && activeTab === "Completed"}
           />
         ))}
       </ScrollView>

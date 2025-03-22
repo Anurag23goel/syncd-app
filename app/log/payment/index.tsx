@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,21 +14,28 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { useAuthStore } from "@/store/authStore";
+import { getAllUserProjects } from "@/services/project_other_user";
 
 interface InventoryCardProps {
   title: string;
   location: string;
+  imgSrc: string | null;
   handleClick: () => void;
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
   title,
   location,
+  imgSrc,
   handleClick,
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <Image
-      source={require("../../../assets/images/recent.png")}
+      source={
+        imgSrc ? { uri: imgSrc } : require("../../../assets/images/recent.png")
+      }
       style={styles.projectImage}
     />
     <View style={styles.cardContent}>
@@ -41,6 +48,34 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 const PaymentLogScreen: React.FC = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog;
+  const [projects, setProjects] = useState<ProjectDetailsResponse[]>([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const authToken = useAuthStore.getState().token;
+
+        if (!authToken) {
+          console.error("No auth token found!");
+          return;
+        }
+
+        const response = await getAllUserProjects(authToken);
+
+        // Check if response contains the "projects" key and set state
+        if (response.data?.projects) {
+          setProjects(response.data.projects); // ✅ Update state with projects array
+        } else {
+          console.warn("No projects found in response.");
+          setProjects([]); // Set empty array if no projects found
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -62,21 +97,14 @@ const PaymentLogScreen: React.FC = () => {
 
       {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <InventoryCard
-          title={t.orionTowers}
-          location="Karnataka, Bengaluru, Koramangala"
-          handleClick={() => router.push("/log/payment/id")}
-        />
-        <InventoryCard
-          title={t.cosmosCrest}
-          location="Maharashtra, Mumbai, Bandra"
-          handleClick={() => router.push("/log/payment/id")}
-        />
-        <InventoryCard
-          title={t.skylineEnclave}
-          location="Delhi, New Delhi, Chanakyapuri"
-          handleClick={() => router.push("/log/payment/id")}
-        />
+        {projects.map((project) => (
+          <InventoryCard
+            imgSrc={project.ProjectThumbnail}
+            title={project.ProjectName}
+            location={project.ProjectLocation}
+            handleClick={() => router.push(`/log/payment/${project.ProjectID}`)}
+          />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

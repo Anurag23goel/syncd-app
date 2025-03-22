@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import ContactSelectionModal from "../../components/Modal/ContactSelectionModal"
 import { LocalSvg } from "react-native-svg/css";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { fetchUserChats } from "@/services/chat";
+import { useAuthStore } from "@/store/authStore";
+import { ChatRoomResponse } from "@/types/Apitypes";
 
 interface ChatItem {
   id: string;
@@ -69,11 +72,43 @@ const chats: ChatItem[] = [
 
 export default function ChatScreen() {
   const language = useLanguageStore((state) => state.language);
+  // const authToken = useAuthStore.getState().token;
   const t = translations[language].chat;
 
   const [activeTab, setActiveTab] = useState("All");
   const [isModalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // const [chats, setChats] = useState<ChatRoomResponse[]>([]);
+  // const [loading, setLoading] = useState(false);
+
+  // useEffect(() => {
+  //   const delayDebounce = setTimeout(() => {
+  //     if (searchQuery.trim().length > 0) {
+  //       fetchChats(searchQuery);
+  //     } else {
+  //       setChats([]); // or fetch all chats if desired
+  //     }
+  //   }, 500); // debounce input to avoid too many API calls
+
+  //   return () => clearTimeout(delayDebounce);
+  // }, [searchQuery]);
+
+  // const fetchChats = async (query: string) => {
+  //   try {
+  //     if (!authToken) {
+  //       console.error("No auth token found!");
+  //       return;
+  //     }
+
+  //     setLoading(true);
+  //     const response = await fetchUserChats(authToken);
+  //     console.log(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching chats:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);

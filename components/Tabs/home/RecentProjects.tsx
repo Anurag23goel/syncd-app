@@ -97,22 +97,20 @@ const RecentProjects = () => {
             <View style={styles.infoContainer}>
               <View style={styles.infoBox}>
                 <Text style={styles.infoLabel}>{t.workDone}</Text>
-                <Text style={styles.infoValueGreen}>10%</Text>
+                <Text style={styles.infoValueGreen}>
+                  {project.progress.percentage}%
+                </Text>
               </View>
               <View style={styles.infoBox}>
                 <Text style={styles.infoLabel}>{t.deadline}</Text>
                 <Text style={styles.infoValueBlue}>
-
-                {
-                  project.EndDate
+                  {project.EndDate
                     ? new Date(project.EndDate).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
                       })
-                    : "Unknown Deadline"
-                }
-
+                    : "Unknown Deadline"}
                 </Text>
                 <Text
                   style={{

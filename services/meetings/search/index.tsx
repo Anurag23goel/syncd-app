@@ -2,8 +2,8 @@ import {
     ApiResponse,
     ApiSuccessResponse,
     SearchUserResponse,
-    ProjectsListResponse,
     TeamsListResponse,
+    ProjectDetailsResponse,
   } from "@/types/Apitypes";
   import axiosInstance from "../../index";
   import { API_ROUTES } from "../../routes.config";
@@ -45,9 +45,9 @@ import {
    */
   export async function getUserProjects(
     authToken: string
-  ): Promise<ApiSuccessResponse<ProjectsListResponse>> {
+  ): Promise<ApiSuccessResponse<ProjectDetailsResponse[]>> {
     try {
-      const { data } = await axiosInstance.get<ApiResponse<ProjectsListResponse>>(
+      const { data } = await axiosInstance.get<ApiResponse<ProjectDetailsResponse[]>>(
         API_ROUTES.MEETING.SEARCH.GET_PROJECTS_OF_USER,
         {
           headers: {

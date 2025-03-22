@@ -12,7 +12,6 @@ import {
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AddIcon } from "@/components/navigation/Icons";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
@@ -25,7 +24,7 @@ interface InventoryCardProps {
   title: string;
   location: string;
   handleClick: () => void;
-  isCompleted?: boolean; // New prop to check if it's in the Completed tab
+  IsCompleted?: boolean; // New prop to check if it's in the Completed tab
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
@@ -33,7 +32,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   location,
   handleClick,
   imgSrc,
-  isCompleted,
+  IsCompleted,
 }) => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs;
@@ -54,7 +53,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
       </View>
 
       {/* Badge */}
-      {isCompleted ? (
+      {IsCompleted ? (
         <View
           style={{
             backgroundColor: "#3498DB",
@@ -101,7 +100,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
       )}
 
       {/* Feedback Section */}
-      {isCompleted && (
+      {IsCompleted && (
         <TouchableOpacity
           style={{
             flexDirection: "row",
@@ -172,8 +171,8 @@ const ProjectScreen: React.FC = () => {
   
 
   const filteredProjects = projects?.filter((project) => {
-    if (activeTab === "Active") return !project.isCompleted;
-    if (activeTab === "Completed") return project.isCompleted;
+    if (activeTab === "Active") return !project.IsCompleted;
+    if (activeTab === "Completed") return project.IsCompleted;
     return true; // Upcoming or other tabs
   });
 
@@ -227,7 +226,7 @@ const ProjectScreen: React.FC = () => {
             title={project.ProjectName}
             location={project.ProjectLocation}
             handleClick={() => router.push("/log/projects/id")}
-            isCompleted={project.isCompleted && activeTab === "Completed"}
+            IsCompleted={project.IsCompleted && activeTab === "Completed"}
           />
         ))}
       </ScrollView>

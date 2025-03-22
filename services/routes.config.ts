@@ -71,7 +71,7 @@ export const API_ROUTES = {
   CHAT: {
     CREATE_CHAT_ROOM: `${BASE_URL}/chatRoutes/CreateChatRoom`,
     SEARCH_USER: `${BASE_URL}/chatRoutes/SearchUsers`,
-    CHAT: "", // Unspecified
+    FETCH_USER_CHATS: `${BASE_URL}/chatRoutes/fetchUserChats`,
   },
   TASK: {
     CREATE_TASK: `${BASE_URL}/taskRoutes/CreateTask`,
@@ -92,6 +92,13 @@ export const API_ROUTES = {
     UPDATE_MEETING: `${BASE_URL}/meetingRoutes/UpdateMeeting`,
     GET_USER_MEETING: `${BASE_URL}/meetingRoutes/GetUserMeetings`,
     DELETE_MEETING: `${BASE_URL}/meetingRoutes/DeleteMeeting/meeting-{{meetingID}}`,
+  },
+} as const;
+
+export const SUPER_ADMIN_API_ROUTES = {
+  AUTH: {},
+  PROJECT: {
+    CREATE_PROJECT: `${BASE_URL}/SuperAdminRoutes/SuperAdminCreateProject`, //requires header
   },
 } as const;
 

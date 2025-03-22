@@ -67,3 +67,29 @@ export async function searchUser(
     throw error;
   }
 }
+
+export async function fetchUserChats(
+  authToken: string
+): Promise<ApiSuccessResponse<ChatRoomResponse[]>> {
+  try {
+    const { data } = await axiosInstance.get<ApiResponse<ChatRoomResponse[]>>(
+      API_ROUTES.CHAT.FETCH_USER_CHATS,
+      {
+        headers: {
+          authToken: authToken,
+        },
+      }
+    );
+
+    return {
+      message: data.message,
+      data: data as any,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
