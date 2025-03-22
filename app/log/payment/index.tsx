@@ -63,7 +63,7 @@ const PaymentLogScreen: React.FC = () => {
         const response = await getAllUserProjects(authToken);
 
         // Check if response contains the "projects" key and set state
-        if (response.data?.projects) {
+        if (response.data.projects) {
           setProjects(response.data.projects); // ✅ Update state with projects array
         } else {
           console.warn("No projects found in response.");
@@ -99,6 +99,7 @@ const PaymentLogScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {projects.map((project) => (
           <InventoryCard
+            key={project.ProjectID}
             imgSrc={project.ProjectThumbnail}
             title={project.ProjectName}
             location={project.ProjectLocation}

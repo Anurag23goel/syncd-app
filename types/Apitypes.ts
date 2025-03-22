@@ -221,10 +221,9 @@ export interface ProjectDetailsResponse {
   }
 }
 
-/**
- * Type for listing projects
- */
-
+export interface AllProjectsResponse {
+  projects: ProjectDetailsResponse[];
+}
 
 /**
  * Type for listing permissions

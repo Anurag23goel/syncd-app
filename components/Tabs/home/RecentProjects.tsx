@@ -19,16 +19,32 @@ const RecentProjects = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs;
   const setToken = useAuthStore((state) => state.setToken);
-  const handleLogout = () => {
-    setToken(null);
-    router.push("/(auth)");
-  };
-
+  const user = useAuthStore((state) => state.user);
   const [recentProjects, setRecentProjects] = useState<
     ProjectDetailsResponse[] | null
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const Greeting = () => {
+    const hour = new Date().getHours();
+
+    let greeting;
+    if (hour < 12) {
+      greeting = `Good Morning, ${user.UserFullName.split(" ")[0]}`; // or t('goodMorning')
+    } else if (hour < 18) {
+      greeting = `Good Afternoon, ${user.UserFullName.split(" ")[0]}`; // or t('goodAfternoon')
+    } else {
+      greeting = `Good Evening, ${user.UserFullName.split(" ")[0]}`; // or t('goodEvening')
+    }
+
+    return <Text style={styles.greetingText}>{greeting}</Text>;
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    router.push("/(auth)");
+  };
 
   // Fetch all projects from the API
   useEffect(() => {
@@ -62,13 +78,17 @@ const RecentProjects = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.greetingContainer}>
-          <TouchableOpacity onPress={handleLogout}>
+          <TouchableOpacity>
             <Image
-              source={require("../../../assets/images/avatar.png")}
+              source={
+                user.UserProfilePicture
+                  ? { uri: user.UserProfilePicture }
+                  : require("../../../assets/images/avatar.png")
+              }
               style={styles.avatar}
             />
           </TouchableOpacity>
-          <Text style={styles.greetingText}>{t.goodMorning}</Text>
+          {Greeting()}
         </View>
         <TouchableOpacity onPress={() => router.push("/notification")}>
           <Ionicons name="notifications-outline" size={24} color="#333" />
@@ -168,7 +188,7 @@ const styles = StyleSheet.create({
     fontFamily: "SFPro-Regular",
   },
   greetingText: {
-    fontSize: 28,
+    fontSize: 18,
     color: "#333",
     fontFamily: "SFPro-Bold",
     marginLeft: 10,
