@@ -33,7 +33,6 @@ const ProfileScreen = () => {
     { icon: "user", placeholder: "Shlok Agheda" },
     { icon: "mail", placeholder: "aghedashlok30@gmail.com" },
     { icon: "phone", placeholder: "+91 987654321" },
-    { icon: "tag", placeholder: "(Role)" },
   ];
 
   // Menu sections

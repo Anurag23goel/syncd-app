@@ -21,7 +21,6 @@ import { searchUser } from "@/services/chat";
 import { SearchUserResponse } from "@/types/Apitypes";
 
 interface ContactSelectionModalProps {
-  visible: boolean;
   onClose: () => void;
 }
 
@@ -29,7 +28,6 @@ interface ContactSelectionModalProps {
 type SelectableContact = SearchUserResponse & { selected: boolean };
 
 const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
-  visible,
   onClose,
 }) => {
   const language = useLanguageStore((state) => state.language);
@@ -46,7 +44,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
   // Load contacts based on search
   useEffect(() => {
     if (!authToken) return;
-  
+
     const fetchSearchedContacts = async (query: string) => {
       try {
         const response = await searchUser(authToken, query); // search by query
@@ -60,7 +58,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
         console.log("Search error:", error.message);
       }
     };
-  
+
     // const fetchAllContacts = async () => {
     //   try {
     //     const response = await fetchAllUsers(authToken); // your API for all users
@@ -74,7 +72,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
     //     console.log("Fetch all contacts error:", error.message);
     //   }
     // };
-  
+
     const delayDebounce = setTimeout(() => {
       if (searchQuery.trim().length > 0) {
         fetchSearchedContacts(searchQuery.trim());
@@ -82,10 +80,9 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
         // fetchAllContacts(); // <-- different API call when no search query
       }
     }, 500);
-  
+
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
-  
 
   const toggleSelection = (userID: string) => {
     setContacts((prev) =>
@@ -149,7 +146,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
   );
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal animationType="slide" transparent>
       <View style={styles.modalOverlay}>
         <SafeAreaView
           style={[

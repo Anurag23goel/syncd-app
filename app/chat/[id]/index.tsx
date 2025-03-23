@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import EditContactModal from "../../components/Modal/EditContactModal";
+import EditContactModal from "@/components/Modal/EditContactModal";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useRouter } from "expo-router";
@@ -234,29 +234,9 @@ const ChatScreen = () => {
                     <Feather name="phone" size={20} color="#6B6B6B" />
                     <Text style={styles.modalDetailText}>9876543210</Text>
                   </View>
-                  <View style={styles.modalDetailRow}>
-                    <Ionicons
-                      name="briefcase-outline"
-                      size={20}
-                      color="#6B6B6B"
-                    />
-                    <Text style={styles.modalDetailText}>Broker</Text>
-                  </View>
-                  <View style={styles.modalDetailRow}>
-                    <Ionicons
-                      name="location-outline"
-                      size={20}
-                      color="#6B6B6B"
-                    />
-                    <Text style={styles.modalDetailText}>Orion Towers</Text>
-                  </View>
+                  
                 </View>
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => setEditModalVisible(true)}
-                >
-                  <Text style={styles.editButtonText}>Edit contact</Text>
-                </TouchableOpacity>
+                
               </View>
             </TouchableWithoutFeedback>
           </View>

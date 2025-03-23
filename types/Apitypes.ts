@@ -543,37 +543,46 @@ export interface CreateChatRoomPayload {
 /**
  * Type for a chat room response
  */
-export interface ChatRoomResponse {
-  success: boolean;
-  filter: string;
-  chatRooms: ChatRoom[];
-  totalCount: number;
-  unreadTotal: number;
+export interface ChatRoomMember {
+  UserID: string;
+  UserFullName: string;
+  UserProfilePicture: string | null;
+  UserContact: string | null;
+  UserEmail: string;
+}
+
+export interface MessageFromBackend {
+  MessageID: string;
+  RoomID: string;
+  SenderID: string;
+  MessageType: "TEXT" | "FILE" | string; // Extend if needed
+  Content: string;
+  FileURL: string | null;
+  FileName: string | null;
+  FileType: string | null;
+  ReadBy: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ChatRoom {
   RoomID: string;
   RoomName: string;
-  DisplayName: string;
-  DisplayPicture: string | null;
-  RoomType: "DIRECT" | "GROUP";
-  UnreadCount: number;
-  LastMessage: LastMessage;
-  Members: ChatMember[];
+  RoomType: "INDIVIDUAL" | "GROUP" | string;
+  CreatedBy: string;
+  Members: ChatRoomMember[];
+  LastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface LastMessage {
-  Content: string;
-  SenderID: string;
-  CreatedAt: string; // ISO date string
+export interface FetchUserChatResponse {
+  success: boolean;
+  chatRoom: ChatRoom;
+  messages: MessageFromBackend[];
+  unreadMessagesMarkedAsRead: number;
 }
 
-export interface ChatMember {
-  UserID: string;
-  UserFullName: string;
-  UserProfilePicture: string | null;
-  IsCurrentUser: boolean;
-}
 
 
 /**

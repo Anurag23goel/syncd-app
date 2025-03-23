@@ -71,6 +71,7 @@ const FileSpaceScreen: React.FC = () => {
         // Check if response contains the "projects" key and set state
         if (response.data?.projects) {
           setAllProjects(response.data.projects); // ✅ Update state with projects array
+          console.log(response.data.projects)
         } else {
           console.warn("No projects found in response.");
           setAllProjects([]); // Set empty array if no projects found

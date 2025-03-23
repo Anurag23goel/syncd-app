@@ -78,7 +78,7 @@ const RecentProjects = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.greetingContainer}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/profile")}>
             <Image
               source={
                 user.UserProfilePicture
@@ -86,6 +86,7 @@ const RecentProjects = () => {
                   : require("../../../assets/images/avatar.png")
               }
               style={styles.avatar}
+              
             />
           </TouchableOpacity>
           {Greeting()}

@@ -41,6 +41,10 @@ export default function ChatScreen() {
         setLoading(true);
         const response = await fetchUserAllChats(authToken);
         const chats: ChatRoom[] = response.data?.chatRooms || [];
+        console.log("USER AUTH TOKEN - ",authToken);
+        
+        console.log(chats);
+        
         setDefaultChats(chats);
       } catch (error) {
         console.error("Error fetching chats:", error);
@@ -94,6 +98,11 @@ export default function ChatScreen() {
   const filteredChats = defaultChats.filter((chat) =>
     chat.DisplayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleModalClose = () => {
+    setSearchQuery("");
+    setModalVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -170,10 +179,7 @@ export default function ChatScreen() {
         />
       </TouchableOpacity>
 
-      <ContactSelectionModal
-        visible={isModalVisible}
-        onClose={() => setModalVisible(false)}
-      />
+      {isModalVisible && <ContactSelectionModal onClose={handleModalClose} />}
     </SafeAreaView>
   );
 }

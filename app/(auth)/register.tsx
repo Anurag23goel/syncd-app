@@ -58,6 +58,8 @@ export default function SignUpScreen() {
           position: "top",
         });
 
+        // INTEGRATE API TO SEND OTP
+
         // Store email for OTP verification
         router.push({
           pathname: "/(auth)/otp",

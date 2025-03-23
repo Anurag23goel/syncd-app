@@ -71,8 +71,8 @@ export const API_ROUTES = {
   CHAT: {
     CREATE_CHAT_ROOM: `${BASE_URL}/chatRoutes/CreateChatRoom`,
     SEARCH_USER: `${BASE_URL}/chatRoutes/SearchUsers`,
-    FETCH_USER_ALL_CHATS: `${BASE_URL}/chatRoutes/fetchUserChats`,
-    FETCH_CHAT_ROOM: `${BASE_URL}/chatRoutes/FetchChatAndMarkRead/{{chatroomID}}`,
+    FETCH_USER_ALL_CHATS: `${BASE_URL}/chatRoutes/fetchUserChats?query={{query}}`,
+    FETCH_CHAT_ROOM: `${BASE_URL}/chatRoutes/FetchChatAndMarkRead/chatroomID={{ChatRoomID}}`,
   },
   TASK: {
     CREATE_TASK: `${BASE_URL}/taskRoutes/CreateTask`,
