@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import {
   Feather,
@@ -16,34 +17,46 @@ import {
 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LanguageModal from "@/components/Modal/LanguageModal";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
+import { editUserProfile } from "@/services/auth";
 
 const ProfileScreen = () => {
+  const router = useRouter();
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
   const { language, setLanguage } = useLanguageStore();
   const setToken = useAuthStore((state) => state.setToken);
+  const authToken = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+
+  const [fullName, setFullName] = useState(user?.UserFullName || "");
+  const [contact, setContact] = useState(user?.UserContact || "");
 
   const t = translations[language];
 
-    const handleLogout = () => {
-      setToken(null);
-      router.push("/(auth)");
-    };
+  const handleLogout = () => {
+    setToken(null);
+    router.push("/(auth)");
+  };
 
-  // Personal details
-  const personalDetails: {
-    icon: "user" | "mail" | "phone" | "tag";
-    placeholder: string;
-  }[] = [
-    { icon: "user", placeholder: "Shlok Agheda" },
-    { icon: "mail", placeholder: "aghedashlok30@gmail.com" },
-    { icon: "phone", placeholder: "+91 987654321" },
-  ];
+  const handleSave = async () => {
+    if (!authToken) {
+      return;
+    }
+    try {
+      const res = await editUserProfile(fullName, contact, authToken);
+      Alert.alert(
+        "Profile Updated",
+        res.message || "Changes saved successfully."
+      );
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to update profile.");
+    }
+  };
 
-  // Menu sections
   const accountSettings = [
     {
       icon: <Feather name="settings" size={20} color="#8C8C8C" />,
@@ -107,19 +120,49 @@ const ProfileScreen = () => {
 
         {/* Personal Details */}
         <Text style={styles.sectionTitle}>{t.profile.personalDetails}</Text>
-        {personalDetails.map((detail, index) => (
-          <View key={index} style={styles.detailRow}>
-            <Feather name={detail.icon} size={20} color="#8C8C8C" />
-            <TextInput
-              style={styles.detailInput}
-              placeholder={detail.placeholder}
-              editable={false}
-            />
-            <TouchableOpacity>
-              <SimpleLineIcons name="pencil" size={20} color="#8C8C8C" />
-            </TouchableOpacity>
-          </View>
-        ))}
+
+        {/* Email (non-editable) */}
+        <View style={styles.detailRow}>
+          <Feather name="mail" size={20} color="#8C8C8C" />
+          <TextInput
+            style={styles.detailInput}
+            value={user?.UserEmail || ""}
+            placeholder="Email"
+            editable={false}
+          />
+        </View>
+
+        {/* Full Name (editable + pencil icon) */}
+        <View style={styles.detailRow}>
+          <Feather name="user" size={20} color="#8C8C8C" />
+          <TextInput
+            style={styles.detailInput}
+            value={fullName}
+            placeholder="Full Name"
+            onChangeText={setFullName}
+            editable={true}
+          />
+          <SimpleLineIcons name="pencil" size={18} color="#8C8C8C" />
+        </View>
+
+        {/* Contact (editable + pencil icon) */}
+        <View style={styles.detailRow}>
+          <Feather name="phone" size={20} color="#8C8C8C" />
+          <TextInput
+            style={styles.detailInput}
+            value={contact}
+            placeholder="Phone Number"
+            onChangeText={setContact}
+            editable={true}
+            keyboardType="phone-pad"
+          />
+          <SimpleLineIcons name="pencil" size={18} color="#8C8C8C" />
+        </View>
+
+        {/* Save Button */}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save Changes</Text>
+        </TouchableOpacity>
 
         {/* Account Settings */}
         <Text style={styles.sectionTitle}>{t.profile.accountSettings}</Text>
@@ -162,6 +205,22 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  saveButton: {
+    backgroundColor: "#003366", // green success-style button
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    marginBottom: 10,
+  },
+
+  saveButtonText: {
+    color: "white",
+    fontSize: 15,
+    fontFamily: "SFPro-Semibold",
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#FFF",
@@ -205,6 +264,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
+    justifyContent: "space-between",
   },
   detailInput: {
     flex: 1,

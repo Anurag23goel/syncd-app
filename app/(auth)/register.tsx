@@ -59,6 +59,7 @@ export default function SignUpScreen() {
         });
 
         // INTEGRATE API TO SEND OTP
+        
 
         // Store email for OTP verification
         router.push({
@@ -167,31 +168,26 @@ export default function SignUpScreen() {
               </ThemedText>
             </TouchableOpacity>
 
-            {/* <View style={styles.dividerContainer}>
+            <View style={styles.dividerContainer}>
               <ThemedText type="default" style={styles.dividerText}>
                 {t.or}
               </ThemedText>
             </View>
 
-            <TouchableOpacity
-              style={[styles.socialButton, { borderColor: themeColors.border }]}
-            >
-              <Image
-                source={require("../../assets/images/assets/google.png")}
-                style={{
-                  width: 24,
-                  height: 24,
-                }}
-              />
-            </TouchableOpacity>
+            
 
-            <TouchableOpacity style={styles.socialButtonDark}>
-              <FontAwesome5
-                name="apple"
-                size={moderateScale(24)}
-                color={"white"}
-              />
-            </TouchableOpacity> */}
+            <TouchableOpacity
+            onPress={() => {console.log("Continue with phone");
+            }}
+              style={[
+                styles.continueButton,
+                { backgroundColor: themeColors.primary },
+              ]}
+            >
+              <ThemedText style={styles.continueWithPhoneButtonText}>
+                {t.continueWithPhone}
+              </ThemedText>
+            </TouchableOpacity>
 
             <View style={styles.termsContainer}>
               <ThemedText style={styles.termsText}>
@@ -230,6 +226,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: moderateScale(24),
+  },
+  continueWithPhoneButtonText: {
+    color: "#fff",
+    fontSize: moderateScale(16),
+    fontFamily: "SFPro-Semibold",
   },
   content: {
     width: "90%",

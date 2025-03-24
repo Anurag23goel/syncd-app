@@ -7,6 +7,9 @@ export const API_ROUTES = {
     VERIFY_OTP: "/userRoutes/verifyOtp",
     VERIFY_GOOGLE_TOKEN: "/userRoutes/verifyGoogleToken",
     VERIFY_AUTH_TOKEN: "/userRoutes/verifyAuthToken",
+    EDIT_PROFILE: "/userRoutes/UserEditProfile", //PUT
+    FORGOT_PASSWORD: "/userRoutes/UserForgotPassword", //PUT
+    VERIFY_AND_CHANGE_PASSWORD: "/userRoutes/UserResetPassword",
   },
   PROJECT_MAIN_USER: {
     ROLE: {
@@ -40,7 +43,34 @@ export const API_ROUTES = {
       UPDATE_MILESTONE: `${BASE_URL}/mileStoneRoutes/DeleteMileStone`, // PUT REQ
       UPDATE_MILESTONE_COPY: `${BASE_URL}/mileStoneRoutes/DeleteMileStoneCopy`, // DELETE REQ
     },
-    FILESPACE: {},
+    FILESPACE: {
+      FILE: {
+        GET_FILES_BY_FOLDER: "/fileSpaceRoutes/GetFilesByFolder", // GET
+        UPLOAD_FILE_TO_FOLDER: "/fileSpaceRoutes/UploadFileToFolder", // POST
+        DELETE_FILE: "/fileSpaceRoutes/DeleteFile", // DELETE
+      },
+
+      COMMENT: {
+        ADD_COMMENT_THREAD: "/fileSpaceRoutes/AddFileComment", // POST
+        ADD_COMMENT_TO_THREAD: "/fileSpaceRoutes/AddFileComment", // POST
+        GET_COMMENTS: "/fileSpaceRoutes/GetFileComments", // GET
+        DELETE_COMMENT: "/fileSpaceRoutes/DeleteComment", // DELETE
+        UPDATE_COMMENT: "/fileSpaceRoutes/UpdateComment", // PUT
+        RESOLVE_THREAD: "/fileSpaceRoutes/ResolveCommentThread", // POST
+        UNRESOLVE_THREAD: "/fileSpaceRoutes/UnresolveCommentThread", // POST
+      },
+
+      FOLDER: {
+        CREATE_FOLDER: "/fileSpaceRoutes/CreateFolder", // POST
+        GET_FOLDERS_BY_PROJECT: "/fileSpaceRoutes/GetFoldersByProject", // GET
+        UPDATE_FOLDER: "/fileSpaceRoutes/UpdateFolder", // PUT
+        DELETE_FOLDER: "/fileSpaceRoutes/DeleteFolder", // DELETE
+      },
+
+      ARCHIVE: {
+        GET_ARCHIVED_FILES: "/meetingRoutes/getArchivedFilesOfProject", // GET
+      },
+    },
     ATTENDANCE: {
       CREATE_ATTENDANCE: `${BASE_URL}/attendanceRoutes/CreateAttendance`,
       UPDATE_ATTENDANCE: `${BASE_URL}/attendanceRoutes/UpdateAttendance`,

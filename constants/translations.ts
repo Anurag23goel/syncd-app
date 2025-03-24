@@ -6,6 +6,7 @@ export const translations = {
       accountSettings: "Account Settings",
       support: "Support",
       logout: "Logout",
+      continue: "Continue With Phone",
       settings: "Settings",
       privacy: "Privacy",
       changeLanguage: "Change language",
@@ -58,7 +59,8 @@ export const translations = {
       password: "Password",
       enterPassword: "Enter your password",
       forgotPassword: "Forgot password?",
-      continue: "Continue",
+      continue: "Continue ",
+      continueWithPhone: "Continue with phone",
       or: "or",
 
       // Register screen
@@ -1262,6 +1264,7 @@ export const translations = {
       enterPassword: "अपना पासवर्ड लिखें",
       forgotPassword: "पासवर्ड भूल गए?",
       continue: "जारी रखें",
+      continueWithPhone: "फोन से जारी रखें",
       or: "या",
 
       // Register screen

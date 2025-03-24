@@ -21,11 +21,18 @@ import DateCard from "@/components/Card/DateCard";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useLocalSearchParams } from 'expo-router';
 
 const ProjectDetailsScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].file;
+
+  const {id} = useLocalSearchParams();
+  console.log(id);
+
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,7 +46,6 @@ const ProjectDetailsScreen: React.FC = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t.projectTitle}</Text>
         </View>
-
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={20} color="gray" />
           <TextInput placeholder={t.search} style={styles.searchInput} />

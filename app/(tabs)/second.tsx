@@ -71,7 +71,6 @@ const FileSpaceScreen: React.FC = () => {
         // Check if response contains the "projects" key and set state
         if (response.data?.projects) {
           setAllProjects(response.data.projects); // ✅ Update state with projects array
-          console.log(response.data.projects)
         } else {
           console.warn("No projects found in response.");
           setAllProjects([]); // Set empty array if no projects found
@@ -86,6 +85,7 @@ const FileSpaceScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t.fileSpace}</Text>
@@ -108,7 +108,7 @@ const FileSpaceScreen: React.FC = () => {
             title={project.ProjectName}
             imgSrc={project.ProjectThumbnail || ""}
             location={project.ProjectLocation}
-            handleClick={() => router.push(`/file`)}
+            handleClick={() => router.push(`/file/${project.ProjectID}`)}
           />
         ))}
       </ScrollView>

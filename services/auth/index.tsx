@@ -126,3 +126,74 @@ export const verifyGoogleToken = async (
     throw error;
   }
 };
+
+export async function editUserProfile(
+  UserFullName: string,
+  UserContact: string,
+  authToken: string
+): Promise<ApiSuccessResponse<any>> {
+  try {
+    const { data } = await axiosInstance.put<ApiResponse<any>>(
+      API_ROUTES.AUTH.EDIT_PROFILE,
+      {
+        UserFullName,
+        UserContact,
+       
+      },
+      {
+        headers: {
+          authToken,
+        },
+      }
+    );
+
+    return {
+      message: data.message,
+      data: data.data,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function forgotPassword(
+  email: string
+): Promise<ApiSuccessResponse<any>> {
+  try {
+    const { data } = await axiosInstance.post<ApiResponse<any>>(
+      API_ROUTES.AUTH.FORGOT_PASSWORD,
+      { UserEmail: email }
+    );
+
+    return {
+      message: data.message,
+      data: data.data,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function verifyAndChangePassword(
+  UserEmail: string,
+  OtpCode: string,
+  NewPassword: string
+): Promise<ApiSuccessResponse<any>> {
+  try {
+    const { data } = await axiosInstance.put<ApiResponse<any>>(
+      API_ROUTES.AUTH.VERIFY_AND_CHANGE_PASSWORD,
+      {
+        UserEmail,
+        OtpCode,
+        NewPassword,
+      }
+    );
+
+    return {
+      message: data.message,
+      data: data.data,
+    };
+  } catch (error) {
+    throw error;
+  }
+}

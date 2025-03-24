@@ -4,6 +4,9 @@ import {
   CreateChatRoomPayload,
   SearchUserResponse,
   ChatRoomResponse,
+  ChatRoom,
+  MessageFromBackend,
+  FetchUserChatResponse,
 } from "@/types/Apitypes";
 import axiosInstance from "../index";
 import { API_ROUTES } from "../routes.config";
@@ -80,11 +83,12 @@ export async function fetchUserAllChats(
 }
 
 export async function fetchUserParticularChat(
-  authToken: string
-): Promise<ApiSuccessResponse<ChatRoomResponse[]>> {
+  authToken: string,
+  chatRoomId: string
+): Promise<FetchUserChatResponse> {
   try {
-    const { data } = await axiosInstance.get<ApiResponse<ChatRoomResponse[]>>(
-      API_ROUTES.CHAT.FETCH_CHAT_ROOM,
+    const { data } = await axiosInstance.get<FetchUserChatResponse>(
+      API_ROUTES.CHAT.FETCH_CHAT_ROOM.replace("{{chatRoomId}}", chatRoomId),
       {
         headers: {
           authToken: authToken,
@@ -92,9 +96,14 @@ export async function fetchUserParticularChat(
       }
     );
 
+    console.log(data);
+    
+
     return {
-      message: data.message,
-      data: data as any,
+      success: data.success,
+      chatRoom: data.chatRoom,
+      messages: data.messages,
+      unreadMessagesMarkedAsRead: data.unreadMessagesMarkedAsRead,
     };
   } catch (error) {
     throw error;

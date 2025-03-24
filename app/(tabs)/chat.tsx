@@ -41,10 +41,7 @@ export default function ChatScreen() {
         setLoading(true);
         const response = await fetchUserAllChats(authToken);
         const chats: ChatRoom[] = response.data?.chatRooms || [];
-        console.log("USER AUTH TOKEN - ",authToken);
-        
-        console.log(chats);
-        
+
         setDefaultChats(chats);
       } catch (error) {
         console.error("Error fetching chats:", error);

@@ -64,6 +64,12 @@ export default function LoginScreen() {
     }
   };
 
+  // FORGOT PASSWORD INTEGRATION
+  const forgotPasswordHandler = async () => {
+    console.log("Forgot password");
+    router.push("/(auth)/forgot_password");
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: themeColors.background }]}
@@ -143,7 +149,10 @@ export default function LoginScreen() {
                   />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={forgotPasswordHandler}
+              >
                 <ThemedText style={styles.forgotPasswordText}>
                   {t.forgotPassword}
                 </ThemedText>
@@ -168,32 +177,6 @@ export default function LoginScreen() {
                 </ThemedText>
               )}
             </TouchableOpacity>
-
-            {/* Divider */}
-            {/* <View style={styles.dividerContainer}>
-              <ThemedText
-                type="default"
-                style={[styles.dividerText, { color: themeColors.text }]}
-              >
-                {t.or}
-              </ThemedText>
-            </View> */}
-
-            {/* Social Buttons */}
-            {/* <TouchableOpacity
-              style={[
-                styles.socialButtonDark,
-                { backgroundColor: isDarkMode ? "#333" : "#000" },
-              ]}
-            >
-              <FontAwesome5
-                name="apple"
-                size={moderateScale(24)}
-                color="white"
-              />
-            </TouchableOpacity> */}
-
-
           </ThemedView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -201,7 +184,7 @@ export default function LoginScreen() {
   );
 }
 
-const lightColors = {
+export const lightColors = {
   primary: "#003366",
   background: "#f5f5f5",
   card: "#fff",
@@ -209,7 +192,7 @@ const lightColors = {
   border: "#e1e1e1",
 };
 
-const darkColors = {
+export const darkColors = {
   primary: "#0A84FF",
   background: "#1C1C1E",
   card: "#2C2C2E",
