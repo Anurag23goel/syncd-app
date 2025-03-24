@@ -14,10 +14,10 @@ import axios from "axios";
  */
 export async function getAllUserProjects(
   authToken: string
-): Promise<ApiSuccessResponse<ProjectDetailsResponse[]>> {
+): Promise<ApiSuccessResponse<any>> {
 
   try {
-    const { data } = await axiosInstance.get<ApiResponse<ProjectDetailsResponse[]>>(
+    const { data } = await axiosInstance.get<ApiResponse<any>>(
       API_ROUTES.PROJECT_OTHER_USER.GET_ALL_PROJECTS,
       {
         headers: {

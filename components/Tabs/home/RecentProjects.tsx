@@ -41,10 +41,7 @@ const RecentProjects = () => {
     return <Text style={styles.greetingText}>{greeting}</Text>;
   };
 
-  const handleLogout = () => {
-    setToken(null);
-    router.push("/(auth)");
-  };
+
 
   // Fetch all projects from the API
   useEffect(() => {

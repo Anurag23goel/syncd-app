@@ -170,17 +170,17 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* Divider */}
-            <View style={styles.dividerContainer}>
+            {/* <View style={styles.dividerContainer}>
               <ThemedText
                 type="default"
                 style={[styles.dividerText, { color: themeColors.text }]}
               >
                 {t.or}
               </ThemedText>
-            </View>
+            </View> */}
 
             {/* Social Buttons */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.socialButtonDark,
                 { backgroundColor: isDarkMode ? "#333" : "#000" },
@@ -191,7 +191,9 @@ export default function LoginScreen() {
                 size={moderateScale(24)}
                 color="white"
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+
+
           </ThemedView>
         </ScrollView>
       </KeyboardAvoidingView>

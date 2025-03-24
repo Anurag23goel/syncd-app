@@ -167,7 +167,7 @@ export default function SignUpScreen() {
               </ThemedText>
             </TouchableOpacity>
 
-            <View style={styles.dividerContainer}>
+            {/* <View style={styles.dividerContainer}>
               <ThemedText type="default" style={styles.dividerText}>
                 {t.or}
               </ThemedText>
@@ -191,7 +191,7 @@ export default function SignUpScreen() {
                 size={moderateScale(24)}
                 color={"white"}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <View style={styles.termsContainer}>
               <ThemedText style={styles.termsText}>

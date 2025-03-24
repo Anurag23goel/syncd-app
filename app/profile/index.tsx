@@ -19,11 +19,19 @@ import LanguageModal from "@/components/Modal/LanguageModal";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useAuthStore } from "@/store/authStore";
 
 const ProfileScreen = () => {
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
   const { language, setLanguage } = useLanguageStore();
+  const setToken = useAuthStore((state) => state.setToken);
+
   const t = translations[language];
+
+    const handleLogout = () => {
+      setToken(null);
+      router.push("/(auth)");
+    };
 
   // Personal details
   const personalDetails: {
@@ -136,7 +144,7 @@ const ProfileScreen = () => {
         ))}
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="white" />
           <Text style={styles.logoutButtonText}>{t.profile.logout}</Text>
         </TouchableOpacity>
