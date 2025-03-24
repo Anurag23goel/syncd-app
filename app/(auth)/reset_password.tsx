@@ -45,7 +45,7 @@ export default function ResetPasswordScreen() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       Alert.alert("Success", "Your password has been reset successfully!", [
-        { text: "OK", onPress: () => router.push("/login") },
+        { text: "OK", onPress: () => router.push("/(auth)") },
       ]);
     } catch (error) {
       Alert.alert("Error", "Failed to reset password. Please try again.");
