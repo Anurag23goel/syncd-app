@@ -37,7 +37,7 @@ export default function ForgotPasswordScreen() {
       Alert.alert(
         "Success",
         response.message || "Check your email for reset instructions.",
-        [{ text: "OK", onPress: () => router.push(`/(auth)/verify_forgot_password_otp/${email}`) }]
+        [{ text: "OK", onPress: () => router.push(`/(auth)/verify_otp_reset_pass/${email}`) }]
       );
     } catch (error: any) {
       console.error(error);
@@ -110,6 +110,7 @@ export default function ForgotPasswordScreen() {
             </View>
           </View>
 
+          {/* RESET BUTTON */}
           <TouchableOpacity
             style={[
               styles.resetButton,
@@ -123,11 +124,12 @@ export default function ForgotPasswordScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.resetButtonText}>
-                Send Reset Instructions
+                Send Reset OTP
               </Text>
             )}
           </TouchableOpacity>
 
+          {/* FORGOT PASS TEXT */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.text }]}>
               Remember your password?{" "}
@@ -138,6 +140,7 @@ export default function ForgotPasswordScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+        
         </View>
       </View>
     </ScrollView>
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(5),
   },
   label: {
     fontSize: moderateScale(14),
@@ -226,7 +229,6 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(12),
     paddingVertical: moderateScale(16),
     alignItems: "center",
-    marginBottom: moderateScale(24),
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: moderateScale(8),
+
   },
   footerText: {
     fontSize: moderateScale(14),

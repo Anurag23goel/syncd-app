@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,117 +9,186 @@ import {
   Image,
   Modal,
   TouchableWithoutFeedback,
-  Keyboard,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EditContactModal from "@/components/Modal/EditContactModal";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAuthStore } from "@/store/authStore";
+import { fetchMessagesForParticularChat } from "@/services/chat";
+import { ChatMessage, ChatRoomMember } from "@/types/Apitypes";
+import { Linking } from "react-native";
+import socket, { connectSocketWithToken } from "@/app/socket";
+
+interface SocketMessageToSend {
+  roomId: string;
+  content: string;
+  messageType: string;
+}
+
+interface SocketMessageToRecieve {
+  content: string;
+}
 
 const ChatScreen = () => {
   const router = useRouter();
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].chat;
+  const { id } = useLocalSearchParams();
+  const chatRoomID = Array.isArray(id) ? id[0] : id;
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hey Ronak, quick update on the project. Can we review the site plans by tomorrow?",
-      time: "08:18 AM",
-      type: "sent",
-    },
-    {
-      id: 2,
-      text: "Sure, I'm available around 11 AM. Does that work?",
-      time: "09:20 AM",
-      type: "received",
-    },
-    {
-      id: 3,
-      text: "Perfect. I'll send over the latest drafts by tonight.",
-      time: "09:25 AM",
-      type: "sent",
-    },
-    {
-      id: 4,
-      text: "Great, I'll take a look before our call.",
-      time: "09:26 AM",
-      type: "received",
-    },
-    {
-      id: 5,
-      text: "Thanks. Let's aim to finalize the elevations in this review.",
-      time: "09:30 AM",
-      type: "sent",
-    },
-    {
-      id: 6,
-      text: "Sounds good. Looking forward to it.",
-      time: "09:31 AM",
-      type: "received",
-    },
-  ]);
+  const authToken = useAuthStore.getState().token;
+  const user = useAuthStore.getState().user;
+  const currentUserID = user.UserID;
 
+  const [actualMessages, setActualMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sendersDetails, setSendersDetails] = useState<ChatRoomMember>({
+    UserID: "",
+    UserFullName: "",
+    UserProfilePicture: "",
+    UserContact: "",
+    UserEmail: "",
+    IsCurrentUser: false,
+  });
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setMessages([
-        ...messages,
-        {
-          id: messages.length + 1,
-          text: newMessage,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          type: "sent",
-        },
-      ]);
-      setNewMessage("");
-    }
-  };
+  useEffect(() => {
+    if (!authToken || !chatRoomID) return;
 
-  const renderMessage = ({
-    item,
-  }: {
-    item: { id: number; text: string; time: string; type: string };
-  }) => (
-    <View
-      style={
-        item.type === "sent"
-          ? styles.sentMessageWrapper
-          : styles.receivedMessageWrapper
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchMessagesForParticularChat(
+          authToken,
+          chatRoomID
+        );
+        setActualMessages(response.messages);
+
+        const sender =
+          response.chatRoom.Members.find((m) => m.UserID !== currentUserID) ||
+          response.chatRoom.Members[1];
+        setSendersDetails(sender);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoading(false);
       }
-    >
+    };
+
+    fetchMessages();
+  }, [authToken, chatRoomID]); // ✅ don't include actualMessages
+
+  // THIS IS THE LOGIC FOR UPDATING ACTUAL MESSAGES
+  useEffect(() => {
+    if (!authToken) {
+      return;
+    }
+    connectSocketWithToken(authToken);
+
+    socket.emit("join-room", chatRoomID);
+
+    socket.on("new-message", (message: any) => {
+      if (message.RoomID === chatRoomID) {
+        const messageToBeAdded: ChatMessage = {
+          MessageID: message.MessageID,
+          RoomID: message.RoomID,
+          SenderID: message.SenderID, // ✅ Fix this
+          MessageType: message.MessageType,
+          Content: message.Content,
+          FileURL: message.FileURL ?? null,
+          FileName: message.FileName ?? null,
+          FileType: message.FileType ?? null,
+          ReadBy: message.ReadBy ?? [],
+          createdAt: message.createdAt
+            ? new Date(message.createdAt)
+            : new Date(),
+          updatedAt: message.updatedAt
+            ? new Date(message.updatedAt)
+            : new Date(),
+        };
+
+        setActualMessages((prev) => [messageToBeAdded, ...prev]);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [chatRoomID, currentUserID]);
+
+  // SOCKET LOGIC FOR SENDING MESSAGE
+  const handleSendMessage = useCallback(() => {
+    if (!newMessage.trim()) return;
+    // When a new message sent from the server
+    const messageToBeSent: SocketMessageToSend = {
+      roomId: chatRoomID,
+      content: newMessage,
+      messageType: "TEXT",
+    };
+
+    const tempMessage: ChatMessage = {
+      MessageID: `temp-${Date.now()}`, // temporary ID
+      RoomID: chatRoomID,
+      SenderID: currentUserID, // from your auth store
+      MessageType: "TEXT",
+      Content: newMessage,
+      FileURL: null,
+      FileName: null,
+      FileType: null,
+      ReadBy: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Optimistically update the UI
+    setActualMessages((prev) => [tempMessage, ...prev]);
+
+    // Emit to server
+    socket.emit("send-message", messageToBeSent);
+
+    console.log("Send:", newMessage);
+    setNewMessage("");
+  }, [newMessage]);
+
+  const renderMessage = ({ item }: { item: ChatMessage }) => {
+    const isSender = item.SenderID === currentUserID;
+
+    return (
       <View
-        style={[
-          styles.messageBubble,
-          item.type === "sent" ? styles.sentBubble : styles.receivedBubble,
-        ]}
+        style={
+          isSender ? styles.sentMessageWrapper : styles.receivedMessageWrapper
+        }
       >
-        <Text
-          style={item.type === "sent" ? styles.sentText : styles.receivedText}
+        <View
+          style={[
+            styles.messageBubble,
+            isSender ? styles.sentBubble : styles.receivedBubble,
+          ]}
         >
-          {item.text}
+          <Text style={isSender ? styles.sentText : styles.receivedText}>
+            {item.Content}
+          </Text>
+        </View>
+        <Text
+          style={[
+            styles.timestamp,
+            isSender ? styles.sentTimestamp : styles.receivedTimestamp,
+          ]}
+        >
+          {new Date(item.createdAt).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
         </Text>
       </View>
-      <Text
-        style={[
-          styles.timestamp,
-          item.type === "sent"
-            ? styles.sentTimestamp
-            : styles.receivedTimestamp,
-        ]}
-      >
-        {item.time}
-      </Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -129,34 +198,52 @@ const ChatScreen = () => {
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
+
           <TouchableOpacity
             onPress={() => setModalVisible(true)}
             style={styles.profileSection}
           >
             <Image
-              source={{ uri: "https://i.pravatar.cc/100?img=3" }}
+              source={{
+                uri:
+                  sendersDetails?.UserProfilePicture ||
+                  "https://i.sstatic.net/34AD2.jpg",
+              }}
               style={styles.profileImage}
             />
             <View>
-              <Text style={styles.headerTitle}>Ronak Ahuja</Text>
+              <Text style={styles.headerTitle}>
+                {sendersDetails?.UserFullName || "User"}
+              </Text>
               <Text style={styles.onlineStatus}>{t.online}</Text>
             </View>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity>
-          <Feather name="phone" size={24} color="#000" />
-        </TouchableOpacity>
+
+        {/* Call Button */}
+        {sendersDetails?.UserContact && (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(`tel:${sendersDetails.UserContact}`)}
+            style={styles.callButton}
+          >
+            <Feather name="phone" size={20} color="#007AFF" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Chat Messages */}
-      <FlatList
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.chatContainer}
-      />
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={actualMessages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.MessageID}
+          contentContainerStyle={styles.chatContainer}
+        />
+      )}
 
-      {/* Input Section */}
+      {/* Input */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -198,70 +285,90 @@ const ChatScreen = () => {
                     alignItems: "center",
                     justifyContent: "space-between",
                     width: "100%",
-                    marginBottom: 24,
                   }}
                 >
                   <View
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      gap: 14,
+                      justifyContent: "space-between",
+                      width: "100%",
+                      marginBottom: 24,
                     }}
                   >
-                    <Image
-                      source={{ uri: "https://i.pravatar.cc/100?img=3" }}
-                      style={styles.modalProfileImage}
-                    />
-                    <Text style={styles.modalName}>Ronak Ahuja</Text>
+                    {/* Left: Profile Image + Name */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 14,
+                      }}
+                    >
+                      <Image
+                        source={{
+                          uri:
+                            sendersDetails.UserProfilePicture ||
+                            "https://i.sstatic.net/34AD2.jpg",
+                        }}
+                        style={styles.modalProfileImage}
+                      />
+                      <Text style={styles.modalName}>
+                        {sendersDetails.UserFullName}
+                      </Text>
+                    </View>
+
+                    {/* Right: Call Button */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (sendersDetails.UserContact) {
+                          Linking.openURL(`tel:${sendersDetails.UserContact}`);
+                        } else {
+                          Alert.alert(
+                            "No phone number",
+                            "This user doesn't have a contact number."
+                          );
+                        }
+                      }}
+                      style={{
+                        padding: 8,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Feather name="phone" size={25} color="#007AFF" />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity>
-                    <Feather
-                      name="phone"
-                      size={24}
-                      color="#000"
-                      style={styles.modalIcon}
-                    />
-                  </TouchableOpacity>
                 </View>
+
                 <View style={styles.modalDetails}>
                   <View style={styles.modalDetailRow}>
                     <Feather name="mail" size={20} color="#6B6B6B" />
                     <Text style={styles.modalDetailText}>
-                      ronak.ahuja12@gmail.com
+                      {sendersDetails.UserEmail || "No Email"}
                     </Text>
                   </View>
                   <View style={styles.modalDetailRow}>
                     <Feather name="phone" size={20} color="#6B6B6B" />
-                    <Text style={styles.modalDetailText}>9876543210</Text>
+                    <Text style={styles.modalDetailText}>
+                      {sendersDetails.UserContact || "No Phone"}
+                    </Text>
                   </View>
-                  
                 </View>
-                
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-
-      <EditContactModal
-        visible={isEditModalVisible}
-        onClose={() => setEditModalVisible(false)}
-        contact={{
-          name: "Ronak Ahuja",
-          phone: "9876543210",
-          email: "ronak.ahuja12@gmail.com",
-          role: t.brokerRole,
-          location: "Orion Towers",
-        }}
-        onUpdate={(updatedContact) => {
-          console.log(updatedContact);
-        }}
-      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  callButton: {
+    padding: 10,
+    marginRight: 10,
+    alignSelf: "center",
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#F9F9F9",
@@ -387,7 +494,6 @@ const styles = StyleSheet.create({
   modalIcon: {},
   modalDetails: {
     width: "100%",
-    marginBottom: 20,
   },
   modalDetailRow: {
     flexDirection: "row",

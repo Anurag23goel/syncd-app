@@ -138,7 +138,6 @@ export async function editUserProfile(
       {
         UserFullName,
         UserContact,
-       
       },
       {
         headers: {
@@ -180,7 +179,7 @@ export async function verifyAndChangePassword(
   NewPassword: string
 ): Promise<ApiSuccessResponse<any>> {
   try {
-    const { data } = await axiosInstance.put<ApiResponse<any>>(
+    const { data } = await axiosInstance.post<ApiResponse<any>>(
       API_ROUTES.AUTH.VERIFY_AND_CHANGE_PASSWORD,
       {
         UserEmail,
@@ -192,6 +191,7 @@ export async function verifyAndChangePassword(
     return {
       message: data.message,
       data: data.data,
+      success: data.success,
     };
   } catch (error) {
     throw error;

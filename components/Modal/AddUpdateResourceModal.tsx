@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Animated,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LocalSvg } from "react-native-svg/css";
@@ -35,7 +36,10 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
   saveText = "Save",
 }) => {
   const language = useLanguageStore((state) => state.language);
-  const t = translations[language].inventory.modal.addUpdateResource;
+  console.log("Current language:", language); // Debug language value
+  const t =
+    translations[language]?.inventory?.modal?.addUpdateResource ||
+    translations["en"].inventory.modal.addUpdateResource;
 
   const [formData, setFormData] = useState<{
     itemName: string;
@@ -57,93 +61,57 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
     date: "",
     category: "",
     paymentMode: "",
-    invoices: [], // Change to an array to store multiple invoices
-    photos: [], // Add photos array to store selected images
+    invoices: [],
+    photos: [],
   });
 
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownHeight = useRef(new Animated.Value(0)).current;
-  const rotationAnim = useRef(new Animated.Value(0)).current; // Rotation value
+  const rotationAnim = useRef(new Animated.Value(0)).current;
 
   const [isCategoryDropdownVisible, setIsCategoryDropdownVisible] =
     useState(false);
   const categoryDropdownHeight = useRef(new Animated.Value(0)).current;
-  const categoryRotationAnim = useRef(new Animated.Value(0)).current; // Rotation value for category
+  const categoryRotationAnim = useRef(new Animated.Value(0)).current;
 
   const toggleDropdown = () => {
-    if (isDropdownVisible) {
-      // Collapse the dropdown
-      Animated.timing(dropdownHeight, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: false,
-      }).start(() => setIsDropdownVisible(false));
-
-      // Rotate back to original
-      Animated.timing(rotationAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      // Expand the dropdown
-      setIsDropdownVisible(true);
-      Animated.timing(dropdownHeight, {
-        toValue: 90, // Adjust height as per your dropdown size
-        duration: 400,
-        useNativeDriver: false,
-      }).start();
-
-      // Rotate to 180 degrees
-      Animated.timing(rotationAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    }
+    const newValue = !isDropdownVisible;
+    setIsDropdownVisible(newValue);
+    Animated.timing(dropdownHeight, {
+      toValue: newValue ? 90 : 0,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(rotationAnim, {
+      toValue: newValue ? 1 : 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   };
 
   const toggleCategoryDropdown = () => {
-    if (isCategoryDropdownVisible) {
-      // Collapse the dropdown
-      Animated.timing(categoryDropdownHeight, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: false,
-      }).start(() => setIsCategoryDropdownVisible(false));
-
-      // Rotate back to original
-      Animated.timing(categoryRotationAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      // Expand the dropdown
-      setIsCategoryDropdownVisible(true);
-      Animated.timing(categoryDropdownHeight, {
-        toValue: 90, // Adjust height as per your dropdown size
-        duration: 400,
-        useNativeDriver: false,
-      }).start();
-
-      // Rotate to 180 degrees
-      Animated.timing(categoryRotationAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    }
+    const newValue = !isCategoryDropdownVisible;
+    setIsCategoryDropdownVisible(newValue);
+    Animated.timing(categoryDropdownHeight, {
+      toValue: newValue ? 90 : 0,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+    Animated.timing(categoryRotationAnim, {
+      toValue: newValue ? 1 : 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
   };
 
   const rotation = rotationAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "180deg"], // Rotate between 0 and 180 degrees
+    outputRange: ["0deg", "180deg"],
   });
 
   const categoryRotation = categoryRotationAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "180deg"], // Rotate between 0 and 180 degrees
+    outputRange: ["0deg", "180deg"],
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -151,15 +119,21 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
   };
 
   const handleSubmit = () => {
+    // Basic validation
+    if (!formData.itemName || !formData.totalQuantity || !formData.cost) {
+      alert(t.validationError || "Please fill in all required fields.");
+      return;
+    }
     onSubmit(formData);
-    onClose(); // Close modal after submission
+    resetForm();
+    onClose();
   };
 
   const handleAddInvoice = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "application/pdf",
-        multiple: true, // Enable multiple file selection
+        multiple: true,
       });
       if (!result.canceled) {
         const uris = result.assets.map((asset) => asset.uri);
@@ -169,7 +143,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
         }));
       }
     } catch (error) {
-      console.error("Error picking document: ", error);
+      console.error("Error picking document:", error);
     }
   };
 
@@ -177,22 +151,56 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true, // Enable multiple image selection
+        allowsMultipleSelection: true,
       });
       if (!result.canceled) {
         const uris = result.assets.map((asset) => asset.uri);
-        setFormData((prev) => ({ ...prev, photos: [...prev.photos, ...uris] }));
+        setFormData((prev) => ({
+          ...prev,
+          photos: [...prev.photos, ...uris],
+        }));
       }
     } catch (error) {
-      console.error("Error picking image: ", error);
+      console.error("Error picking image:", error);
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      itemName: "",
+      brandName: "",
+      totalQuantity: "",
+      units: "",
+      cost: "",
+      date: "",
+      category: "",
+      paymentMode: "",
+      invoices: [],
+      photos: [],
+    });
+    setIsDropdownVisible(false);
+    setIsCategoryDropdownVisible(false);
+    dropdownHeight.setValue(0);
+    categoryDropdownHeight.setValue(0);
+    rotationAnim.setValue(0);
+    categoryRotationAnim.setValue(0);
+  };
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isVisible) {
+      resetForm();
+    }
+  }, [isVisible]);
+
   return (
     <Modal visible={isVisible} animationType="slide" transparent>
-      <View style={styles.modalContainer}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalContainer}
+      >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={styles.modalTitle}>{title || t.title}</Text>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <View style={styles.inputContainer}>
               <TextInput
@@ -212,7 +220,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 onChangeText={(text) => handleInputChange("brandName", text)}
               />
             </View>
-
             <View style={styles.inputContainer}>
               <LocalSvg
                 asset={require("../../assets/images/quantity.svg")}
@@ -228,9 +235,9 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 onChangeText={(text) =>
                   handleInputChange("totalQuantity", text)
                 }
+                keyboardType="numeric"
               />
             </View>
-
             <View style={styles.inputContainer}>
               <MaterialIcons
                 name="currency-rupee"
@@ -272,7 +279,9 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 }}
                 onPress={toggleCategoryDropdown}
               >
-                <Text style={styles.dropdownTitle}>{t.category}</Text>
+                <Text style={styles.dropdownTitle}>
+                  {formData.category || t.category}
+                </Text>
                 <Animated.View
                   style={{ transform: [{ rotate: categoryRotation }] }}
                 >
@@ -284,15 +293,10 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                   />
                 </Animated.View>
               </TouchableOpacity>
-
               <Animated.View
                 style={[
                   styles.dropdown,
-                  {
-                    height: categoryDropdownHeight,
-                    overflow: "hidden",
-                    justifyContent: "flex-start",
-                  },
+                  { height: categoryDropdownHeight, overflow: "hidden" },
                 ]}
               >
                 <TouchableOpacity
@@ -300,9 +304,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                     handleInputChange("category", t.categories.category1);
                     toggleCategoryDropdown();
                   }}
-                  style={{
-                    marginTop: 10,
-                  }}
+                  style={{ marginTop: 10 }}
                 >
                   <Text style={styles.dropdownItem}>
                     {t.categories.category1}
@@ -330,8 +332,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 </TouchableOpacity>
               </Animated.View>
             </View>
-
-            {/* Payment Mode Dropdown */}
             <View style={[styles.inputContainer, { flexDirection: "column" }]}>
               <TouchableOpacity
                 style={{
@@ -342,7 +342,9 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 }}
                 onPress={toggleDropdown}
               >
-                <Text style={styles.dropdownTitle}>{t.paymentMode}</Text>
+                <Text style={styles.dropdownTitle}>
+                  {formData.paymentMode || t.paymentMode}
+                </Text>
                 <Animated.View style={{ transform: [{ rotate: rotation }] }}>
                   <Feather
                     name="chevron-down"
@@ -352,15 +354,10 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                   />
                 </Animated.View>
               </TouchableOpacity>
-
               <Animated.View
                 style={[
                   styles.dropdown,
-                  {
-                    height: dropdownHeight,
-                    overflow: "hidden",
-                    justifyContent: "flex-start",
-                  },
+                  { height: dropdownHeight, overflow: "hidden" },
                 ]}
               >
                 <TouchableOpacity
@@ -368,9 +365,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                     handleInputChange("paymentMode", t.modes.mode1);
                     toggleDropdown();
                   }}
-                  style={{
-                    marginTop: 10,
-                  }}
+                  style={{ marginTop: 10 }}
                 >
                   <Text style={styles.dropdownItem}>{t.modes.mode1}</Text>
                 </TouchableOpacity>
@@ -392,7 +387,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                 </TouchableOpacity>
               </Animated.View>
             </View>
-
             <TouchableOpacity
               style={styles.addInvoice}
               onPress={handleAddInvoice}
@@ -408,7 +402,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
               </View>
               <Text style={{ color: "#3498DB" }}>{t.actions.add}</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.addInvoice}
               onPress={handleAddPhoto}
@@ -424,7 +417,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
               </View>
               <Text style={{ color: "#3498DB" }}>{t.actions.add}</Text>
             </TouchableOpacity>
-
             {formData.invoices.length > 0 &&
               formData.invoices.map((invoice, index) => (
                 <View key={index} style={styles.addInvoice}>
@@ -434,8 +426,10 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                         styles.addInvoiceText,
                         { width: "90%", fontSize: 12 },
                       ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
-                      {invoice}
+                      {invoice.split("/").pop()} {/* Display only filename */}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -450,7 +444,6 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                   </TouchableOpacity>
                 </View>
               ))}
-
             {formData.photos.length > 0 &&
               formData.photos.map((photo, index) => (
                 <View key={index} style={styles.addInvoice}>
@@ -460,8 +453,10 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                         styles.addInvoiceText,
                         { width: "90%", fontSize: 12 },
                       ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
-                      {photo}
+                      {photo.split("/").pop()} {/* Display only filename */}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -476,18 +471,17 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
                   </TouchableOpacity>
                 </View>
               ))}
-
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={onClose}>
-                <Text style={styles.closeButton}>{t.close}</Text>
+                <Text style={styles.closeButton}>{closeText || t.close}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSubmit}>
-                <Text style={styles.saveButton}>{t.save}</Text>
+                <Text style={styles.saveButton}>{saveText || t.save}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -501,7 +495,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "90%",
-    maxHeight: "90%", // Set max height to 90% of the screen
+    maxHeight: "90%",
     backgroundColor: "white",
     borderRadius: 16,
     padding: 20,
@@ -546,7 +540,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     width: "100%",
   },
-
   dropdownTitle: {
     fontSize: 15,
     fontFamily: "SFPro-Regular",

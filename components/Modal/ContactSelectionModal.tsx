@@ -17,8 +17,9 @@ import * as ImagePicker from "expo-image-picker";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
-import { searchUser } from "@/services/chat";
-import { SearchUserResponse } from "@/types/Apitypes";
+import { createChatRoom, searchUser } from "@/services/chat";
+import { CreateChatRoomPayload, SearchUserResponse } from "@/types/Apitypes";
+import { router } from "expo-router";
 
 interface ContactSelectionModalProps {
   onClose: () => void;
@@ -32,13 +33,15 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
 }) => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].contactSelection;
+  const user = useAuthStore.getState().user; // Replace with your logic
+  const currentUserID = user.UserID;
+  const authToken = useAuthStore.getState().token;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isGroupView, setIsGroupView] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
   const [groupImage, setGroupImage] = useState<string | null>(null);
-  const authToken = useAuthStore.getState().token;
   const [contacts, setContacts] = useState<SelectableContact[]>([]);
 
   // Load contacts based on search
@@ -122,6 +125,25 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
     onClose();
   };
 
+  const handleCreateDirectChat = async () => {
+    if (selectedContacts.length !== 1 || !currentUserID) return;
+
+    if (!authToken) return;
+
+    try {
+      const chatRoomPayload: CreateChatRoomPayload = {
+        RoomType: "INDIVIDUAL",
+        Members: [selectedContacts[0].UserID],
+      };
+
+      const res = await createChatRoom(authToken, chatRoomPayload);
+      router.push(`/chat/${selectedContacts[0].UserID}`);
+      onClose();
+    } catch (error: any) {
+      console.error("Error creating direct chat:", error.message);
+    }
+  };
+
   const renderContact = ({ item }: { item: SelectableContact }) => (
     <TouchableOpacity
       style={styles.contactRow}
@@ -185,12 +207,21 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
                   <Text style={styles.selectedCount}>
                     {selectedContacts.length} {t.selected}
                   </Text>
-                  <TouchableOpacity
-                    style={styles.nextButton}
-                    onPress={() => setIsGroupView(true)}
-                  >
-                    <Text style={styles.nextButtonText}>{t.next}</Text>
-                  </TouchableOpacity>
+                  {selectedContacts.length === 1 ? (
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={handleCreateDirectChat}
+                    >
+                      <Text style={styles.nextButtonText}>{t.startChat}</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.nextButton}
+                      onPress={() => setIsGroupView(true)}
+                    >
+                      <Text style={styles.nextButtonText}>{t.next}</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </>
@@ -201,7 +232,7 @@ const ContactSelectionModal: React.FC<ContactSelectionModalProps> = ({
                   onPress={() => setIsGroupView(false)}
                   style={styles.backButton}
                 >
-                  <Ionicons name="chevron-back" size={24} color="#000" />
+                  <Ionicons name="chevron-back" size={24} color="#000" onPress={() => router.back()}/>
                 </TouchableOpacity>
                 <Text style={styles.headerText}>{t.newGroup}</Text>
                 <View style={{ width: 24 }} />

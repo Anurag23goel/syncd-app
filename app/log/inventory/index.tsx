@@ -16,7 +16,7 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
 import { getAllUserProjects } from "@/services/project_other_user";
-import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { ProjectDetailsResponse, SingleProjectDetails } from "@/types/Apitypes";
 
 interface InventoryCardProps {
   title: string;
@@ -33,9 +33,9 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <Image
-      source={imgSrc
-        ? { uri: imgSrc }
-        : require("../../../assets/images/recent.png")}
+      source={
+        imgSrc ? { uri: imgSrc } : require("../../../assets/images/recent.png")
+      }
       style={styles.projectImage}
     />
     <View style={styles.cardContent}>
@@ -50,12 +50,13 @@ const FileSpaceScreen: React.FC = () => {
   const t = translations[language].inventory;
 
   const [inventoryProjects, setInventoryProjects] = useState<
-    ProjectDetailsResponse[] | null
+    SingleProjectDetails[] | null
   >([]);
   useEffect(() => {
     const fetchRecentProjects = async () => {
       try {
         const authToken = useAuthStore.getState().token;
+        console.log("Token:", authToken);
 
         if (!authToken) {
           console.error("No auth token found!");
@@ -96,14 +97,19 @@ const FileSpaceScreen: React.FC = () => {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {inventoryProjects?.map((project) => (
           <InventoryCard
             key={project.ProjectID}
             title={project.ProjectName}
             imgSrc={project.ProjectThumbnail || ""}
             location={project.ProjectLocation || "Unknown Location"}
-            handleClick={() => router.push(`/log/inventory/resource`)}
+            handleClick={() =>
+              router.push(`/log/inventory/resource/${project.ProjectID}`)
+            }
           />
         ))}
       </ScrollView>

@@ -70,7 +70,7 @@ export default function Attendance({ onBack }: { onBack: () => void }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
+          <Ionicons name="chevron-back" size={24} color="#000" onPress={() => router.back()}/>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.title}</Text>
       </View>

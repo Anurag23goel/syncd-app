@@ -73,7 +73,7 @@ const IncidentReportScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Feather name="chevron-left" size={24} color="black" />
+        <Feather name="chevron-left" size={24} color="black" onPress={() => router.back()}/>
         <Text style={styles.headerTitle}>{t.title}</Text>
       </View>
 

@@ -166,25 +166,24 @@ export interface DeleteInventoryPayload {
 /**
  * Type for inventory item response
  */
-export interface InventoryResponse {
+export interface InventoryItemNew {
   InventoryID: string;
   ProjectID: string;
   ResourceName: string;
   BrandName: string;
-  TotalQuantity: string;
-  Cost: string;
+  TotalQuantity: number;
+  Cost: string;  // Keeping it as string since it has decimal values
   Category: string;
   PaymentMode: string;
-  CreatedAt: string;
+  InvoiceLink: string | null;
+  PhotoLink: string | null;
+  createdAt: Date;  // ISO date string
+  updatedAt: Date;  // ISO date string
 }
 
-/**
- * Type for listing inventory items
- */
 export interface InventoryListResponse {
-  inventoryItems: InventoryResponse[];
+  inventory: InventoryItemNew[];
 }
-
 /**
  * Type for adding users to a project
  */
@@ -193,32 +192,191 @@ export interface AddUserToProjectPayload {
   UserIDs: string[];
 }
 
-/**
- * Type for project details response
- */
-export interface ProjectDetailsResponse {
+export interface SingleProjectDetails {
   ProjectID: string;
   ProjectName: string;
-  ProjectDescription: string;
   ProjectCode: string;
-  ProjectArea: string;
+  ProjectDescription: string;
+  StartDate: string | null; // ISO date string or null
+  EndDate: string | null; // ISO date string or null
+  ProjectArea: string; // e.g., "7200sqft"
   Budget: number | null;
   Currency: string | null;
-  StartDate: string;
-  EndDate: string | null;
-  ProjectLocation: string;
+  ProjectLocation: string | null;
   ProjectMapLink: string | null;
   ProjectThumbnail: string | null;
-  ProjectAdminIDs: string[]; // Assuming this is an array of admin IDs
-  ProjectMembers: string[]; // Assuming an array of member IDs
-  userPermissions: string[]; // Assuming this contains user permissions
-  isAdmin: boolean;
+  ProjectAdminIDs: string[]; // Array of user IDs
+  ProjectMembers: string[]; // Array of user IDs
   IsCompleted: boolean;
+  userPermissions: string[]; // Empty in this case, but assuming it’s an array of permissions
+  isAdmin: boolean;
+  status: string; // Assuming possible statuses
   progress: {
     percentage: number;
     completedMilestones: number;
     totalMilestones: number;
   };
+}
+
+/**
+ * Type for project details response
+ */
+export interface ProjectDetailsResponse {
+  project: SingleProjectDetails;
+  keyPersonnel: {
+    stakeholders: any[]; // You can define Stakeholder type if needed
+    contractors: any[];
+    clients: any[];
+  };
+  attendance: {
+    records: AttendanceRecord[];
+    stats: {
+      totalPresent: number;
+      totalAbsent: number;
+      attendanceRate: string;
+    };
+  };
+  renderComparisons: any[]; // You can define the type if available
+  tasks: {
+    records: Task[];
+    stats: {
+      totalTasks: number;
+      completed: number;
+      pending: number;
+      delayed: number;
+      upcoming: number;
+    };
+  };
+  inventory: {
+    records: InventoryItem[];
+    transactions: InventoryTransaction[];
+    stats: {
+      totalItems: number;
+      totalValue: number;
+      totalAdded: number;
+      totalUsed: number;
+      totalDamaged: number;
+      categoryBreakdown: Record<string, number>;
+    };
+  };
+  milestones: {
+    records: any[]; // Define Milestone type if needed
+    stats: {
+      total: number;
+      completed: number;
+      pending: number;
+    };
+  };
+}
+
+interface AttendanceRecord {
+  AttendanceID: string;
+  ProjectID: string;
+  Date: string;
+  AttendanceRecords: {
+    name: string;
+    laborId: string;
+    remarks: string;
+    isPresent: boolean;
+  }[];
+  TotalPresent: number;
+  TotalAbsent: number;
+  CreatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Task {
+  TaskID: string;
+  ProjectID: string;
+  Title: string;
+  Description: string;
+  StartDate: string;
+  EndDate: string;
+  Status: string;
+  Priority: string;
+  AssignedTo: string[];
+  AssignedBy: string;
+  ParentTaskID: string | null;
+  TeamID: string | null;
+  Attachments: any[];
+  IsCompleted: boolean;
+  AssignmentType: string;
+  CompletedBy: string | null;
+  CompletionStatus: Record<string, any>;
+  CompletedAt: string | null;
+  VerifiedBy: string | null;
+  VerifiedAt: string | null;
+  Notes: string | null;
+  SubTasks: string[];
+  ApprovalStatus: string;
+  CreatorNotes: string | null;
+  CompletionNotes: Record<string, any>;
+  ApprovalNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  AssignedUsers: string[];
+  subtasks: SubTask[];
+}
+
+interface SubTask {
+  TaskID: string;
+  ProjectID: string;
+  Title: string;
+  Description: string;
+  StartDate: string;
+  EndDate: string;
+  Status: string;
+  Priority: string;
+  AssignedTo: string[];
+  AssignedBy: string;
+  ParentTaskID: string;
+  TeamID: string | null;
+  Attachments: any[];
+  IsCompleted: boolean;
+  AssignmentType: string;
+  CompletedBy: string | null;
+  CompletionStatus: Record<string, any>;
+  CompletedAt: string | null;
+  VerifiedBy: string | null;
+  VerifiedAt: string | null;
+  Notes: string | null;
+  SubTasks: any[];
+  ApprovalStatus: string;
+  CreatorNotes: string | null;
+  CompletionNotes: Record<string, any>;
+  ApprovalNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  AssignedUsers: string[];
+}
+
+interface InventoryItem {
+  InventoryID: string;
+  ProjectID: string;
+  ResourceName: string;
+  BrandName: string;
+  TotalQuantity: number;
+  Cost: string;
+  Category: string;
+  PaymentMode: string;
+  InvoiceLink: string | null;
+  PhotoLink: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface InventoryTransaction {
+  TransactionID: string;
+  InventoryID: string;
+  Quantity: number;
+  TransactionType: "ADDED" | "USED" | string;
+  PhotoLink: string | null;
+  TransactionDate: string;
+  Note: string | null;
+  UsedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -535,20 +693,55 @@ export interface RenderComparisonResponse {
  * Type for creating a chat room
  */
 export interface CreateChatRoomPayload {
-  RoomType: "GROUP" | "DIRECT";
-  RoomName: string;
+  RoomType: "GROUP" | "INDIVIDUAL";
   Members: string[];
 }
 
 /**
  * Type for a chat room response
  */
+
+export interface ParticularChatResponse {
+  success: boolean;
+  chatRoom: ChatRoom;
+  messages: ChatMessage[];
+  unreadMessagesMarkedAsRead: number;
+}
+
+export interface HomeScreenChatResponse {
+  success: boolean;
+  filter: string;
+  chatRooms: ChatRoom[];
+  totalCount: number;
+  unreadTotal: number;
+}
+
+export interface ChatRoom {
+  RoomID: string;
+  RoomName: string;
+  DisplayName: string;
+  DisplayPicture: string;
+  RoomType: string;
+  UnreadCount: number;
+  CreatedBy: string;
+  LastMessage: {
+    Content: string;
+    SenderID: string;
+    CreatedAt: Date;
+  };
+  Members: ChatRoomMember[];
+  LastMessageAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface ChatRoomMember {
   UserID: string;
   UserFullName: string;
-  UserProfilePicture: string | null;
-  UserContact: string | null;
+  UserProfilePicture: string;
+  UserContact: string;
   UserEmail: string;
+  IsCurrentUser: boolean;
 }
 
 export interface MessageFromBackend {
@@ -565,15 +758,18 @@ export interface MessageFromBackend {
   updatedAt: string;
 }
 
-export interface ChatRoom {
+export interface ChatMessage {
+  MessageID: string;
   RoomID: string;
-  RoomName: string;
-  RoomType: "INDIVIDUAL" | "GROUP" | string;
-  CreatedBy: string;
-  Members: ChatRoomMember[];
-  LastMessageAt: string;
-  createdAt: string;
-  updatedAt: string;
+  SenderID: string;
+  MessageType: "TEXT" | "IMAGE" | "VIDEO" | "FILE" | string; // You can add more known types here
+  Content: string;
+  FileURL: string | null;
+  FileName: string | null;
+  FileType: string | null;
+  ReadBy: string[]; // array of UserIDs who have read the message
+  createdAt: Date; // ISO timestamp
+  updatedAt: Date; // ISO timestamp
 }
 
 export interface FetchUserChatResponse {
@@ -582,8 +778,6 @@ export interface FetchUserChatResponse {
   messages: MessageFromBackend[];
   unreadMessagesMarkedAsRead: number;
 }
-
-
 
 /**
  * Type for searching users

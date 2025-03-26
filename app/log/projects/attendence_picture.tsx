@@ -43,7 +43,7 @@ export default function WorkerProfile() {
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color="#fff" />
+            <Ionicons name="chevron-back" size={24} color="#fff" onPress={() => router.back()}/>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{data.name}</Text>
         </View>

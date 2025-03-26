@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Timeline from "react-native-timeline-flatlist";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { router } from "expo-router";
 
 interface MilestoneType {
   time: string;
@@ -145,7 +146,7 @@ const Milestone = () => {
       <ScrollView contentContainerStyle={styles.scrollableContent}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#000" />
+            <Ionicons name="chevron-back" size={24} color="#000" onPress={() => router.back()}/>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t.title}</Text>
         </View>

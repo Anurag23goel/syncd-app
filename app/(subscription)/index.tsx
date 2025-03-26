@@ -28,7 +28,7 @@ export default function SubscriptionPage() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         {/* Back Button */}
-        <TouchableOpacity style={styles.backButton} onPress={() => {}}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#000" />
           <Text style={styles.backText}>{t.back}</Text>
         </TouchableOpacity>

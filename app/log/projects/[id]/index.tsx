@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TaskManager from "@/components/Modal/Project/TaskModal";
 import ProjectOverview from "@/components/Modal/Project/MilestoneModal";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { moderateScale } from "@/utils/spacing";
 import MenuModal from "@/components/Modal/Project/ProjectOptionsModal";
 import { PieChart } from "react-native-gifted-charts";
@@ -28,6 +28,9 @@ import { BottomSheet } from "react-native-btr";
 import Collapsible from "react-native-collapsible";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useAuthStore } from "@/store/authStore";
+import { getProjectDetails } from "@/services/project_user/basic";
+import { ProjectDetailsResponse } from "@/types/Apitypes";
 
 interface ProfileImage {
   id: string;
@@ -48,9 +51,19 @@ interface Checklist {
   items: ChecklistItem[];
 }
 
-export default function OrionTowers() {
+export default function ProjectDetails() {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].projectDetails;
+  const { id } = useLocalSearchParams();
+  const projectId = Array.isArray(id) ? id[0] : id;
+  console.log("Project ID:", projectId);
+
+  const authToken = useAuthStore.getState().token;
+  console.log("Auth TOKEN:", authToken);
+
+  const [projectDetails, setProjectDetails] =
+    useState<ProjectDetailsResponse | null>(null);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [checklistVisible, setChecklistVisible] = useState(false);
   const [checklists, setChecklists] = useState<Checklist[]>([
@@ -73,38 +86,78 @@ export default function OrionTowers() {
   ]);
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [assignee, setAssignee] = useState<string>("");
-  const [assigneeModalVisible, setAssigneeModalVisible] = useState(false);
   const [assigneeSheetVisible, setAssigneeSheetVisible] = useState(false);
-  const presentCount = 200;
-  const absentCount = 300;
-  const totalCount = presentCount + absentCount;
-  const percentage = Math.round((presentCount / totalCount) * 100);
 
+  // Map API data to pie chart
   const pieData = [
-    { value: presentCount, color: "#4CAF50" },
-    { value: absentCount, color: "#FF4444" },
-  ];
-  const stakeholders: ProfileImage[] = [
-    { id: "1", image: "https://i.pravatar.cc/100?img=1", name: "John Doe" },
-    { id: "2", image: "https://i.pravatar.cc/100?img=2", name: "Jane Smith" },
     {
-      id: "3",
-      image: "https://i.pravatar.cc/100?img=3",
-      name: "Alice Johnson",
+      value: projectDetails?.attendance.stats.totalPresent || 0,
+      color: "#4CAF50",
+    },
+    {
+      value: projectDetails?.attendance.stats.totalAbsent || 0,
+      color: "#FF4444",
     },
   ];
 
-  const contractors: ProfileImage[] = [
-    { id: "1", image: "https://i.pravatar.cc/100?img=4", name: "Contractor 1" },
-    { id: "2", image: "https://i.pravatar.cc/100?img=5", name: "Contractor 2" },
-    { id: "3", image: "https://i.pravatar.cc/100?img=6", name: "Contractor 3" },
-  ];
+  // Placeholder data for stakeholders, contractors, and client (replace with API data if available)
+  const stakeholders: ProfileImage[] = projectDetails?.keyPersonnel.stakeholders
+    .length
+    ? projectDetails.keyPersonnel.stakeholders.map((s, index) => ({
+        id: `${index}`,
+        image: "https://i.pravatar.cc/100?img=" + (index + 1), // Placeholder
+        name: s.name || `Stakeholder ${index + 1}`,
+      }))
+    : [
+        { id: "1", image: "https://i.pravatar.cc/100?img=1", name: "John Doe" },
+        {
+          id: "2",
+          image: "https://i.pravatar.cc/100?img=2",
+          name: "Jane Smith",
+        },
+        {
+          id: "3",
+          image: "https://i.pravatar.cc/100?img=3",
+          name: "Alice Johnson",
+        },
+      ];
 
-  const client: ProfileImage = {
-    id: "1",
-    image: "https://i.pravatar.cc/100?img=7",
-    name: "Client Name",
-  };
+  const contractors: ProfileImage[] = projectDetails?.keyPersonnel.contractors
+    .length
+    ? projectDetails.keyPersonnel.contractors.map((c, index) => ({
+        id: `${index}`,
+        image: "https://i.pravatar.cc/100?img=" + (index + 4), // Placeholder
+        name: c.name || `Contractor ${index + 1}`,
+      }))
+    : [
+        {
+          id: "1",
+          image: "https://i.pravatar.cc/100?img=4",
+          name: "Contractor 1",
+        },
+        {
+          id: "2",
+          image: "https://i.pravatar.cc/100?img=5",
+          name: "Contractor 2",
+        },
+        {
+          id: "3",
+          image: "https://i.pravatar.cc/100?img=6",
+          name: "Contractor 3",
+        },
+      ];
+
+  const client: ProfileImage = projectDetails?.keyPersonnel.clients.length
+    ? {
+        id: "1",
+        image: "https://i.pravatar.cc/100?img=7", // Placeholder
+        name: projectDetails.keyPersonnel.clients[0].name || "Client Name",
+      }
+    : {
+        id: "1",
+        image: "https://i.pravatar.cc/100?img=7",
+        name: "Client Name",
+      };
 
   const addChecklistItem = (
     checklistId: string,
@@ -112,23 +165,22 @@ export default function OrionTowers() {
     assignee: string
   ) => {
     setChecklists(
-      checklists.map((checklist) => {
-        if (checklist.id === checklistId) {
-          return {
-            ...checklist,
-            items: [
-              ...checklist.items,
-              {
-                id: Date.now().toString(),
-                text: itemText,
-                checked: false,
-                assignee,
-              },
-            ],
-          };
-        }
-        return checklist;
-      })
+      checklists.map((checklist) =>
+        checklist.id === checklistId
+          ? {
+              ...checklist,
+              items: [
+                ...checklist.items,
+                {
+                  id: Date.now().toString(),
+                  text: itemText,
+                  checked: false,
+                  assignee,
+                },
+              ],
+            }
+          : checklist
+      )
     );
     setNewChecklistItem("");
     setAssignee("");
@@ -136,44 +188,40 @@ export default function OrionTowers() {
 
   const toggleChecklistItem = (checklistId: string, itemId: string) => {
     setChecklists(
-      checklists.map((checklist) => {
-        if (checklist.id === checklistId) {
-          return {
-            ...checklist,
-            items: checklist.items.map((item) =>
-              item.id === itemId ? { ...item, checked: !item.checked } : item
-            ),
-          };
-        }
-        return checklist;
-      })
+      checklists.map((checklist) =>
+        checklist.id === checklistId
+          ? {
+              ...checklist,
+              items: checklist.items.map((item) =>
+                item.id === itemId ? { ...item, checked: !item.checked } : item
+              ),
+            }
+          : checklist
+      )
     );
   };
 
   const deleteChecklistItem = (checklistId: string, itemId: string) => {
     setChecklists(
-      checklists.map((checklist) => {
-        if (checklist.id === checklistId) {
-          return {
-            ...checklist,
-            items: checklist.items.filter((item) => item.id !== itemId),
-          };
-        }
-        return checklist;
-      })
+      checklists.map((checklist) =>
+        checklist.id === checklistId
+          ? {
+              ...checklist,
+              items: checklist.items.filter((item) => item.id !== itemId),
+            }
+          : checklist
+      )
     );
   };
 
   const [collapsed, setCollapsed] = useState<{ [key: string]: boolean }>(() => {
     const initial: { [key: string]: boolean } = {};
-    checklists.forEach((checklist) => {
-      initial[checklist.id] = false;
-    });
+    checklists.forEach((checklist) => (initial[checklist.id] = false));
     return initial;
   });
 
   const toggleCollapse = (id: string) => {
-    setCollapsed((prevState) => ({ ...prevState, [id]: !prevState[id] }));
+    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const renderChecklist = (checklists: Checklist[]) =>
@@ -254,24 +302,26 @@ export default function OrionTowers() {
 
   const renderContent = () => (
     <View>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
+          <Ionicons
+            name="chevron-back"
+            onPress={() => router.back()}
+            size={24}
+            color="#000"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.title}</Text>
       </View>
 
-      {/* Main Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={require("../../../assets/images/assets/image1.png")}
+          source={require("../../../../assets/images/assets/image1.png")}
           style={styles.mainImage}
           resizeMode="cover"
         />
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
         <View
           style={{
@@ -281,77 +331,48 @@ export default function OrionTowers() {
             width: "100%",
           }}
         >
-          <Text style={styles.title}>{t.title}</Text>
+          <Text style={styles.title}>
+            {projectDetails?.project.ProjectName || "Loading..."}
+          </Text>
           <View style={styles.weatherContainer}>
             <Feather name="sun" size={24} color="#6B6B6B" />
-            <View
-              style={{
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
+            <View style={{ flexDirection: "column", alignItems: "center" }}>
               <Text style={styles.weatherText}>{t.weather.temperature}</Text>
               <Text style={styles.weatherCondition}>{t.weather.condition}</Text>
             </View>
           </View>
         </View>
 
-        {/* Location and Weather */}
         <View style={styles.infoRow}>
           <View style={styles.locationContainer}>
-            <Text style={styles.location}>{t.location}</Text>
-          </View>
-        </View>
-
-        {/* Metadata */}
-        <View style={styles.metadata}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Feather name="dollar-sign" size={12} color="#8C8C8C" />
-            <Text style={styles.metadataText}>{t.metadata.currency}</Text>
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Feather name="globe" size={12} color="#8C8C8C" />
-            <Text style={styles.metadataText}>{t.metadata.timeZone}</Text>
-          </View>
-
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Feather name="hash" size={12} color="#8C8C8C" />
-            <Text style={styles.metadataText}>
-              {t.metadata.measurementUnits}
+            <Text style={styles.location}>
+              {projectDetails?.project.ProjectLocation ||
+                "Location not specified"}
             </Text>
           </View>
         </View>
 
-        {/* Location Link Button */}
-        <View style={{ width: "35%" }}>
-          <TouchableOpacity style={styles.locationButton}>
-            <Text style={styles.locationButtonText}>{t.locationLink}</Text>
-            <Feather name="copy" size={12} color="#fff" />
-          </TouchableOpacity>
+        <View style={styles.metadata}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Feather name="dollar-sign" size={12} color="#8C8C8C" />
+            <Text style={styles.metadataText}>
+              {projectDetails?.project.Currency || t.metadata.currency}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Feather name="globe" size={12} color="#8C8C8C" />
+            <Text style={styles.metadataText}>{t.metadata.timeZone}</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Feather name="hash" size={12} color="#8C8C8C" />
+            <Text style={styles.metadataText}>
+              {projectDetails?.project.ProjectArea ||
+                t.metadata.measurementUnits}
+            </Text>
+          </View>
         </View>
 
-        {/* People Sections */}
         <View style={styles.peopleContainer}>
-          {/* Stakeholders */}
           <TouchableOpacity
             style={styles.peopleSection}
             onPress={() => router.push("/log/projects/team_dashboard")}
@@ -374,7 +395,6 @@ export default function OrionTowers() {
             </View>
           </TouchableOpacity>
 
-          {/* Contractors */}
           <TouchableOpacity
             style={styles.peopleSection}
             onPress={() => router.push("/log/projects/team_dashboard")}
@@ -397,7 +417,6 @@ export default function OrionTowers() {
             </View>
           </TouchableOpacity>
 
-          {/* Client */}
           <TouchableOpacity
             style={styles.peopleSection}
             onPress={() => router.push("/log/projects/team_dashboard")}
@@ -408,6 +427,7 @@ export default function OrionTowers() {
             </View>
           </TouchableOpacity>
         </View>
+
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.attendance.title}
         </Text>
@@ -422,13 +442,13 @@ export default function OrionTowers() {
               donut
               radius={90}
               innerRadius={70}
-              centerLabelComponent={() => {
-                return (
-                  <View style={styles.centerLabel}>
-                    <Text style={styles.percentageText}>{percentage}%</Text>
-                  </View>
-                );
-              }}
+              centerLabelComponent={() => (
+                <View style={styles.centerLabel}>
+                  <Text style={styles.percentageText}>
+                    {projectDetails?.attendance.stats.attendanceRate || "0%"}
+                  </Text>
+                </View>
+              )}
             />
           </View>
           <View style={styles.legendContainer}>
@@ -437,7 +457,8 @@ export default function OrionTowers() {
                 style={[styles.legendDot, { backgroundColor: "#4CAF50" }]}
               />
               <Text style={styles.legendText}>
-                {t.attendance.present} {presentCount}
+                {t.attendance.present}{" "}
+                {projectDetails?.attendance.stats.totalPresent || 0}
               </Text>
             </View>
             <View style={styles.legendItem}>
@@ -445,7 +466,8 @@ export default function OrionTowers() {
                 style={[styles.legendDot, { backgroundColor: "#FF4444" }]}
               />
               <Text style={styles.legendText}>
-                {t.attendance.absent} {absentCount}
+                {t.attendance.absent}{" "}
+                {projectDetails?.attendance.stats.totalAbsent || 0}
               </Text>
             </View>
           </View>
@@ -519,8 +541,6 @@ export default function OrionTowers() {
       <Text style={styles.assigneeOptionsTitle}>
         {t.checklist.selectAssignee}
       </Text>
-
-      {/* Checklist Selection */}
       <View style={styles.checklistSelection}>
         <Text style={styles.sectionLabel}>{t.checklist.selectChecklist}</Text>
         {checklists.map((checklist) => (
@@ -545,8 +565,6 @@ export default function OrionTowers() {
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Assignee Selection */}
       <View style={styles.assigneeSelection}>
         <Text style={styles.sectionLabel}>{t.checklist.selectPerson}</Text>
         {stakeholders.map((stakeholder) => (
@@ -591,15 +609,11 @@ export default function OrionTowers() {
   );
 
   const addNewChecklist = (title: string, items: ChecklistItem[]) => {
-    setChecklists((prevChecklists) => [
-      ...prevChecklists,
-      {
-        id: Date.now().toString(), // Generate a unique ID
-        title,
-        items,
-      },
+    setChecklists((prev) => [
+      ...prev,
+      { id: Date.now().toString(), title, items },
     ]);
-    setChecklistVisible(false); // Close the modal after adding a checklist
+    setChecklistVisible(false);
   };
 
   const handleAddItem = () => {
@@ -618,16 +632,27 @@ export default function OrionTowers() {
     setSelectedChecklistId("");
   };
 
-  const handleAssigneeSelection = (stakeholder: ProfileImage) => {
-    setAssignee(stakeholder.name);
-    setAssigneeSheetVisible(false);
-  };
+  useEffect(() => {
+    if (!authToken || !projectId) return;
+
+    const fetchProjectDetails = async () => {
+      try {
+        const response = await getProjectDetails(projectId, authToken);
+        setProjectDetails(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      }
+    };
+
+    fetchProjectDetails();
+  }, [authToken, projectId]);
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         data={[{ key: "content" }]}
-        renderItem={({ item }) => <View>{renderContent()}</View>}
+        renderItem={() => <View>{renderContent()}</View>}
         keyExtractor={(item) => item.key}
         contentContainerStyle={{ paddingBottom: 30 }}
       />
@@ -665,7 +690,7 @@ export default function OrionTowers() {
             onPress={() => setAssigneeSheetVisible(true)}
           >
             <Text style={styles.assigneeButtonText}>
-              {assignee ? assignee : t.checklist.selectAssignee}
+              {assignee || t.checklist.selectAssignee}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.addButton} onPress={handleAddItem}>
@@ -693,6 +718,7 @@ export default function OrionTowers() {
   );
 }
 
+// Your existing styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

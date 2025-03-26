@@ -214,7 +214,7 @@ const ProjectScreen: React.FC = () => {
             title={project.ProjectName}
             location={project.ProjectLocation}
             imgSrc={project.ProjectThumbnail || ""}
-            handleClick={() => router.push("/log/projects/id")}
+            handleClick={() => router.push(`/log/projects/${project.ProjectID}`)}
             IsCompleted={project.IsCompleted && activeTab === "Completed"}
           />
         ))}

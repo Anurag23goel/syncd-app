@@ -23,6 +23,7 @@ export const API_ROUTES = {
       GET_ALL_INVENTORY_ITEMS: `${BASE_URL}/inventoryRoutes/GetInventory/{{ProjectID}}`,
       UPDATE_INVENTORY_ITEM: `${BASE_URL}/inventoryRoutes/updateItem`,
       DELETE_INVENTORY_ITEM: `${BASE_URL}/inventoryRoutes/deleteInventory`,
+      GET_INVENTORY_HISTORY_FOR_USER: `${BASE_URL}/inventoryRoutes/GetInventoryHistory/{{inventoryID}}`,
     },
     BASIC: {
       GET_ALL_PROJECTS: `${BASE_URL}/adminRoutes/adminGetAllProjects`,
@@ -102,7 +103,7 @@ export const API_ROUTES = {
     CREATE_CHAT_ROOM: `${BASE_URL}/chatRoutes/CreateChatRoom`,
     SEARCH_USER: `${BASE_URL}/chatRoutes/SearchUsers`,
     FETCH_USER_ALL_CHATS: `${BASE_URL}/chatRoutes/fetchUserChats?query={{query}}`,
-    FETCH_CHAT_ROOM: `${BASE_URL}/chatRoutes/FetchChatAndMarkRead/chatroomID={{ChatRoomID}}`,
+    FETCH_CHAT_MESSAGES_WITH_PARTICULAR_USER: `${BASE_URL}/chatRoutes/FetchChatAndMarkRead/{{chatroomID}}`,
   },
   TASK: {
     CREATE_TASK: `${BASE_URL}/taskRoutes/CreateTask`,

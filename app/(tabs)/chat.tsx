@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -30,28 +31,30 @@ export default function ChatScreen() {
   const [defaultChats, setDefaultChats] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchAllChatsForDefaultScreen = async () => {
-      try {
-        if (!authToken) {
-          console.error("No auth token found!");
-          return;
-        }
-
-        setLoading(true);
-        const response = await fetchUserAllChats(authToken);
-        const chats: ChatRoom[] = response.data?.chatRooms || [];
-
-        setDefaultChats(chats);
-      } catch (error) {
-        console.error("Error fetching chats:", error);
-      } finally {
-        setLoading(false);
+  const fetchAllChatsForDefaultScreen = async () => {
+    try {
+      if (!authToken) {
+        console.error("No auth token found!");
+        return;
       }
-    };
 
-    fetchAllChatsForDefaultScreen();
-  }, []);
+      setLoading(true);
+      const response = await fetchUserAllChats(authToken); // Replace with your API call
+      const chats = response.data?.chatRooms || [];
+
+      setDefaultChats(chats);
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (authToken) {
+      fetchAllChatsForDefaultScreen();
+    }
+  }, [authToken]);
 
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
@@ -60,42 +63,57 @@ export default function ChatScreen() {
     }
   };
 
-  const renderChatItem = (chat: ChatRoom) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => router.push(`/chat/${chat.RoomID}`)}
-    >
-      <Image
-        source={{
-          uri: chat.DisplayPicture || "https://via.placeholder.com/100",
-        }}
-        style={styles.avatar}
-      />
-      <View style={styles.chatInfo}>
-        <View style={styles.chatHeader}>
-          <Text style={styles.chatName}>{chat.DisplayName}</Text>
-          <Text style={styles.timeAgo}>
-            {new Date(chat.LastMessage.CreatedAt).toLocaleTimeString()}
-          </Text>
+  const renderChatItem = (chat: ChatRoom) => {
+    const otherUser = chat.Members.find((m) => !m.IsCurrentUser);
+
+    return (
+      <TouchableOpacity
+        style={styles.chatItem}
+        onPress={() => router.push(`/chat/${chat.RoomID}`)}
+      >
+        <Image
+          source={{
+            uri:
+              otherUser?.UserProfilePicture ||
+              "https://via.placeholder.com/100",
+          }}
+          style={styles.avatar}
+        />
+        <View style={styles.chatInfo}>
+          <View style={styles.chatHeader}>
+            <Text style={styles.chatName}>{otherUser?.UserFullName}</Text>
+            <Text style={styles.timeAgo}>
+              {chat.LastMessage
+                ? new Date(chat.LastMessage.CreatedAt).toLocaleTimeString(
+                    "en-US",
+                    {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    }
+                  )
+                : ""}
+            </Text>
+          </View>
+          <View style={styles.chatFooter}>
+            <Text style={styles.lastMessage} numberOfLines={1}>
+              {chat.LastMessage?.Content || ""}
+            </Text>
+            {(chat.UnreadCount ?? 0) > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadCount}>{chat.UnreadCount}</Text>
+              </View>
+            )}
+          </View>
         </View>
-        <View style={styles.chatFooter}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {chat.LastMessage.Content}
-          </Text>
-          {chat.UnreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>{chat.UnreadCount}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const filteredChats = defaultChats.filter((chat) =>
-    chat.DisplayName.toLowerCase().includes(searchQuery.toLowerCase())
+    chat.Members.find((m) => !m.IsCurrentUser)
+      ?.UserFullName.toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
-
   const handleModalClose = () => {
     setSearchQuery("");
     setModalVisible(false);
@@ -142,27 +160,30 @@ export default function ChatScreen() {
         ))}
       </View>
 
-      {/* Chat List */}
-      <FlatList
-        data={filteredChats}
-        keyExtractor={(item) => item.RoomID}
-        renderItem={({ item }) => renderChatItem(item)}
-        contentContainerStyle={styles.chatList}
-        showsVerticalScrollIndicator={false}
-        refreshing={loading}
-        onRefresh={() => {
-          setSearchQuery(""); // clear search on pull refresh
-          // re-trigger effect logic
-          setDefaultChats([]);
-          setTimeout(() => {
-            if (authToken)
-              fetchUserAllChats(authToken).then((res) => {
-                const chats: ChatRoom[] = res.data?.chatRooms || [];
-                setDefaultChats(chats);
-              });
-          }, 300);
-        }}
-      />
+      {loading && defaultChats.length === 0 ? (
+        <ActivityIndicator size="large" style={{ marginTop: 50 }} />
+      ) : (
+        <FlatList
+          data={filteredChats}
+          keyExtractor={(item) => item.RoomID}
+          renderItem={({ item }) => renderChatItem(item)}
+          contentContainerStyle={styles.chatList}
+          showsVerticalScrollIndicator={false}
+          refreshing={loading}
+          onRefresh={() => {
+            setSearchQuery(""); // clear search on pull refresh
+            setDefaultChats([]);
+            setTimeout(() => {
+              fetchAllChatsForDefaultScreen();
+            }, 300);
+          }}
+          ListEmptyComponent={
+            <Text style={{ textAlign: "center", marginTop: 32 }}>
+              No chats found.
+            </Text>
+          }
+        />
+      )}
 
       {/* Floating Action Button */}
       <TouchableOpacity

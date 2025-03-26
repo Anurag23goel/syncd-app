@@ -4,8 +4,6 @@ import {
   AddInventoryPayload,
   UpdateInventoryPayload,
   DeleteInventoryPayload,
-  InventoryResponse,
-  InventoryListResponse,
 } from "@/types/Apitypes";
 import axiosInstance from "../../index";
 import { API_ROUTES } from "../../routes.config";
@@ -39,8 +37,9 @@ export async function addInventoryItem(
  * @returns List of inventory items
  */
 export async function getAllInventoryItems(
-  projectId: string
-): Promise<ApiSuccessResponse<InventoryListResponse>> {
+  projectId: string,
+  authToken: string
+): Promise<ApiSuccessResponse<any>> {
   try {
     const url =
       API_ROUTES.PROJECT_MAIN_USER.INVENTORY.GET_ALL_INVENTORY_ITEMS.replace(
@@ -48,13 +47,13 @@ export async function getAllInventoryItems(
         projectId
       );
 
-    const { data } = await axiosInstance.get<
-      ApiResponse<InventoryListResponse>
-    >(url);
+    const { data } = await axiosInstance.get<ApiResponse<any>>(url, {
+      headers: { authToken },
+    });
 
     return {
       message: data.message,
-      data: data.data as any,
+      data: data as any,
     };
   } catch (error) {
     throw error;
@@ -96,6 +95,32 @@ export async function deleteInventoryItem(
     const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>(
       API_ROUTES.PROJECT_MAIN_USER.INVENTORY.DELETE_INVENTORY_ITEM,
       deleteData
+    );
+
+    return {
+      message: data.message,
+      data: data.data as any,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function GET_INVENTORY_HISTORY_FOR_USER(
+  inventoryID: string,
+  authToken: string
+): Promise<ApiSuccessResponse<{ message: string }>> {
+  try {
+    const { data } = await axiosInstance.get<ApiResponse<{ message: string }>>(
+      API_ROUTES.PROJECT_MAIN_USER.INVENTORY.GET_INVENTORY_HISTORY_FOR_USER.replace(
+        "{{projectID}}",
+        inventoryID
+      ),
+      {
+        headers: {
+          authToken,
+        },
+      }
     );
 
     return {

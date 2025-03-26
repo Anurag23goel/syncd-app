@@ -6,10 +6,10 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import BudgetScreen from "@/components/paymentLog/budget";
 import ProjectOverview from "@/components/Modal/Project/MilestoneModal";
 import Filter_Calendar from "@/components/Tabs/home/Filter_Calendar";
@@ -19,14 +19,45 @@ import AddExpenseModal from "@/components/Modal/Payment/AddExpense"; // Import A
 import { moderateScale } from "@/utils/spacing"; // Import moderateScale
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { getProjectDetails } from "@/services/project_user/basic";
+import { useStore } from "zustand";
+import { useAuthStore } from "@/store/authStore";
 
 const Id = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog;
+  const authToken = useAuthStore.getState().token;
 
   const [isSelectionModalVisible, setIsSelectionModalVisible] = useState(false);
   const [isMilestoneModalVisible, setIsMilestoneModalVisible] = useState(false);
   const [isExpenseModalVisible, setIsExpenseModalVisible] = useState(false); // New state
+
+  const { id } = useLocalSearchParams();
+  const projectID = Array.isArray(id) ? id[0] : id;
+
+
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      try {
+        if (!authToken) {
+          return;
+        }
+        // TODO: Replace with actual API call when available
+        console.log("Fetching project details for ID:", projectID, authToken);
+        const response = await getProjectDetails(projectID, authToken);
+        console.log(response.data);
+        // setProjectDetails(response.data);
+
+
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      }
+    };
+
+    if (projectID) {
+      fetchProjectDetails();
+    }
+  }, [projectID]);
 
   const handleAddMilestone = () => {
     setIsSelectionModalVisible(false);
@@ -119,7 +150,12 @@ const Id = () => {
           <>
             <View style={styles.header}>
               <TouchableOpacity onPress={() => router.back()}>
-                <Feather name="chevron-left" size={24} color="black" />
+                <Feather
+                  name="chevron-left"
+                  size={24}
+                  color="black"
+                  onPress={() => router.back()}
+                />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>{t.orionTowers}</Text>
             </View>
@@ -142,6 +178,8 @@ const Id = () => {
         onAddMilestone={handleAddMilestone}
         onAddExpense={handleAddExpense} // Pass the handler
       />
+
+      {/* ADD BUTTON */}
       <AddMilestoneModal
         visible={isMilestoneModalVisible}
         onClose={() => setIsMilestoneModalVisible(false)}

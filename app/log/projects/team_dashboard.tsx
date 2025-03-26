@@ -15,6 +15,7 @@ import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { router } from "expo-router";
 
 interface TeamMember {
   id: string;
@@ -123,7 +124,7 @@ export default function TeamDashboard({ onBack }: { onBack: () => void }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
+          <Ionicons name="chevron-back" size={24} color="#000" onPress={() => router.back()}/>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.title}</Text>
       </View>

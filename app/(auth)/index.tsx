@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
@@ -177,6 +178,27 @@ export default function LoginScreen() {
                 </ThemedText>
               )}
             </TouchableOpacity>
+
+            {/* OR Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.line} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.line} />
+            </View>
+
+            {/* Register Button */}
+            <TouchableOpacity
+              style={[
+                styles.registerButton,
+                { backgroundColor: themeColors.primary },
+              ]}
+              onPress={() => router.push("/(auth)/register")}
+            >
+              <ThemedText style={styles.registerButtonText}>
+                Register
+              </ThemedText>
+            </TouchableOpacity>
+            
           </ThemedView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -199,8 +221,25 @@ export const darkColors = {
   text: "#F2F2F7",
   border: "#3A3A3C",
 };
-
 const styles = StyleSheet.create({
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#ccc",
+  },
+
+  registerButton: {
+    width: "100%",
+    borderRadius: moderateScale(6),
+    paddingVertical: moderateScale(14),
+    alignItems: "center",
+    marginBottom: moderateScale(24),
+  },
+  registerButtonText: {
+    color: "#fff",
+    fontSize: moderateScale(16),
+    fontFamily: "SFPro-Semibold",
+  },
   container: {
     flex: 1,
   },

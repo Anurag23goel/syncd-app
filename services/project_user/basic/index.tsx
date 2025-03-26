@@ -9,17 +9,13 @@ import {
 import axiosInstance from "../../index";
 import { API_ROUTES } from "../../routes.config";
 
-/**
- * Get all projects
- * @returns List of projects
- */
 export async function getAllProjects(): Promise<
   ApiSuccessResponse<ProjectDetailsResponse[]>
 > {
   try {
-    const { data } = await axiosInstance.get<ApiResponse<ProjectDetailsResponse[]>>(
-      API_ROUTES.PROJECT_MAIN_USER.BASIC.GET_ALL_PROJECTS
-    );
+    const { data } = await axiosInstance.get<
+      ApiResponse<ProjectDetailsResponse[]>
+    >(API_ROUTES.PROJECT_MAIN_USER.BASIC.GET_ALL_PROJECTS);
 
     return {
       message: data.message,
@@ -30,10 +26,6 @@ export async function getAllProjects(): Promise<
   }
 }
 
-/**
- * Get all permissions
- * @returns List of permissions
- */
 export async function getAllPermissions(): Promise<
   ApiSuccessResponse<PermissionsListResponse>
 > {
@@ -51,11 +43,6 @@ export async function getAllPermissions(): Promise<
   }
 }
 
-/**
- * Add users to a project
- * @param payload - Add user to project payload
- * @returns Success message
- */
 export async function addUserToProject(
   payload: AddUserToProjectPayload
 ): Promise<ApiSuccessResponse<{ message: string }>> {
@@ -74,12 +61,6 @@ export async function addUserToProject(
   }
 }
 
-/**
- * Get project details
- * @param projectId - Project ID
- * @param authToken - Admin Authentication Token
- * @returns Project details
- */
 export async function getProjectDetails(
   projectId: string,
   authToken: string
@@ -93,7 +74,7 @@ export async function getProjectDetails(
     const { data } = await axiosInstance.get<
       ApiResponse<ProjectDetailsResponse>
     >(url, {
-      headers: { Authorization: `Bearer ${authToken}` },
+      headers: { authToken },
     });
 
     return {
@@ -105,11 +86,6 @@ export async function getProjectDetails(
   }
 }
 
-/**
- * Get all users
- * @param authToken - Admin Authentication Token
- * @returns List of users
- */
 export async function getAllUsers(
   authToken: string
 ): Promise<ApiSuccessResponse<UsersListResponse>> {

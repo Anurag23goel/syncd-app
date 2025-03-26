@@ -41,9 +41,9 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
     <Pressable style={styles.card} onPress={handleClick}>
       <View style={{ flexDirection: "row" }}>
         <Image
-          source={imgSrc
-            ? { uri: imgSrc }
-            : require("../../assets/images/recent.png")}
+          source={
+            imgSrc ? { uri: imgSrc } : require("../../assets/images/recent.png")
+          }
           style={styles.projectImage}
         />
         <View style={styles.cardContent}>
@@ -136,9 +136,9 @@ const ProjectScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Active");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs;
-  const [projects, setAllProjects] = useState<
-    ProjectDetailsResponse[] | null
-  >([]);
+  const [projects, setAllProjects] = useState<ProjectDetailsResponse[] | null>(
+    []
+  );
 
   useEffect(() => {
     const fetchRecentProjects = async () => {
@@ -168,7 +168,6 @@ const ProjectScreen: React.FC = () => {
   }, []);
 
   // Sample project data
-  
 
   const filteredProjects = projects?.filter((project) => {
     if (activeTab === "Active") return !project.IsCompleted;
@@ -225,7 +224,9 @@ const ProjectScreen: React.FC = () => {
             key={index}
             title={project.ProjectName}
             location={project.ProjectLocation}
-            handleClick={() => router.push("/log/projects/id")}
+            handleClick={() =>
+              router.push(`/log/projects/${project.ProjectID}`)
+            }
             IsCompleted={project.IsCompleted && activeTab === "Completed"}
           />
         ))}
