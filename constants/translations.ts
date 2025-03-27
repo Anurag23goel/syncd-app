@@ -387,6 +387,7 @@ export const translations = {
         incomplete: "Incomplete",
         pending: "Pending",
         delayed: "Delayed",
+        upcoming: "Upcoming",
       },
       graph: "Graph",
       tasks: "Tasks",

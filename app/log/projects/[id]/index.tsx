@@ -444,7 +444,7 @@ export default function ProjectDetails() {
               radius={90}
               innerRadius={70}
               centerLabelComponent={() => (
-                <View style={styles.centerLabel}>
+                <View style={styles.centerLabelContainer}>
                   <Text style={styles.percentageText}>
                     {projectDetails?.attendance.stats.attendanceRate || "0%"}
                   </Text>
@@ -720,6 +720,24 @@ export default function ProjectDetails() {
 
 // Your existing styles remain unchanged
 const styles = StyleSheet.create({
+  progressContainer: {
+    width: moderateScale(180),
+    height: moderateScale(180),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centerLabelContainer: {
+    // Use flexbox to center the content
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  percentageText: {
+    fontSize: moderateScale(20),
+    fontWeight: "500",
+    fontFamily: "SFPro-Semibold",
+    textAlign: "center", // Ensure text is centered
+  },
   container: {
     flex: 1,
     backgroundColor: "#F2F2F2",
@@ -859,23 +877,14 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(10),
     alignItems: "center",
   },
-  progressContainer: {
-    width: moderateScale(180),
-    height: moderateScale(180),
-    alignItems: "center",
-    justifyContent: "center",
-  },
+
   centerLabel: {
     position: "absolute",
     top: moderateScale(-15),
     left: moderateScale(-35),
     fontSize: moderateScale(14),
   },
-  percentageText: {
-    fontSize: moderateScale(15),
-    fontWeight: "500",
-    fontFamily: "SFPro-Semibold",
-  },
+ 
   legendContainer: {
     flexDirection: "row",
     justifyContent: "center",

@@ -98,8 +98,25 @@ export interface TaskStats {
   upcoming: number;
 }
 
+export interface Task_Record {
+  TaskID: string;
+  Title: string;
+  Description: string;
+  StartDate: string;
+  EndDate: string;
+  Status: string;
+  Priority: string;
+  AssignedTo: string[];
+  AssignedBy: string;
+  IsCompleted: boolean;
+  ApprovalStatus: string;
+  createdAt: string;
+  updatedAt: string;
+  subtasks: any[];
+}
+
 export interface TaskData {
-  records: any[]; // Define if known
+  records: Task_Record[]; // Define if known
   stats: TaskStats;
 }
 

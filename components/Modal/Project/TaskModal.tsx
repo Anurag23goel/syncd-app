@@ -11,6 +11,12 @@ import { moderateScale } from "@/utils/spacing";
 import { router } from "expo-router";
 import { translations } from "@/constants/translations";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { Task_Record, TaskStats } from "@/types/NewApiTypes";
+
+interface TaskManagerProps {
+  tasksStats?: TaskStats; // Made optional to handle undefined case
+  taskRecords?: Task_Record[]; // Made optional to handle undefined case
+}
 
 interface TaskStatus {
   label: string;
@@ -18,29 +24,34 @@ interface TaskStatus {
   color: string;
 }
 
-export default function TaskManager() {
-  const [activeTab, setActiveTab] = useState("graph");
+export default function TaskManager({ tasksStats, taskRecords }: TaskManagerProps) {
+  const [activeTab, setActiveTab] = useState<"graph" | "tasks">("graph");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tasks;
 
+  // Default to empty stats and records if undefined
+  const safeStats = tasksStats || { completed: 0, pending: 0, delayed: 0, upcoming: 0, totalTasks: 0 };
+  const safeRecords = taskRecords || [];
+
+  // Dynamically map task stats to taskStatuses
   const taskStatuses: TaskStatus[] = [
-    { label: t.status.completed, value: 5, color: "#007BFF" },
-    { label: t.status.incomplete, value: 2, color: "#E74C3C" },
-    { label: t.status.pending, value: 1.5, color: "#FFB800" },
-    { label: t.status.delayed, value: 1.5, color: "#6B6B6B" },
+    { label: t.status.completed, value: safeStats.completed, color: "#007BFF" },
+    { label: t.status.pending, value: safeStats.pending, color: "#FFB800" },
+    { label: t.status.delayed, value: safeStats.delayed, color: "#6B6B6B" },
+    { label: t.status.upcoming, value: safeStats.upcoming, color: "#E74C3C" },
   ];
 
-  const total = taskStatuses.reduce((sum, status) => sum + status.value, 0);
+  const total = safeStats.totalTasks;
 
   const renderDonutChart = () => {
-    const size = 200;
-    const strokeWidth = 35;
+    const size = moderateScale(200);
+    const strokeWidth = moderateScale(35);
     const radius = (size - strokeWidth) / 2;
     const center = size / 2;
     const circumference = 2 * Math.PI * radius;
 
     let startAngle = 0;
-    const gapDegrees = 2; // Gap between segments in degrees
+    const gapDegrees = 2;
 
     return (
       <View
@@ -49,10 +60,8 @@ export default function TaskManager() {
       >
         <Svg width={size} height={size}>
           {taskStatuses.map((status, index) => {
-            const percentage = (status.value / total) * 0.98; // Reduce slightly to create gaps
-            const dashArray = `${circumference * percentage} ${
-              circumference * (1 - percentage)
-            }`;
+            const percentage = total > 0 ? (status.value / total) * 0.98 : 0;
+            const dashArray = `${circumference * percentage} ${circumference * (1 - percentage)}`;
             const rotate = startAngle * 360 + index * gapDegrees;
             startAngle += percentage;
 
@@ -72,20 +81,21 @@ export default function TaskManager() {
           })}
           <SvgText
             x={center}
-            y={center - 10}
+            y={center - moderateScale(5)}
             textAnchor="middle"
             fill="#000"
-            fontSize="16"
+            fontSize={moderateScale(16)}
+            fontFamily="SFPro-Regular"
           >
             {t.total}
           </SvgText>
           <SvgText
-            x={center - 25}
-            y={center + 15}
+            x={center}
+            y={center + moderateScale(15)}
             textAnchor="middle"
             fill="#000"
-            fontSize="20"
-            fontWeight={700}
+            fontSize={moderateScale(20)}
+            fontFamily="SFPro-Bold"
           >
             {total} {t.tasksCount}
           </SvgText>
@@ -109,12 +119,22 @@ export default function TaskManager() {
 
   const renderTasks = () => (
     <View style={styles.tasksContainer}>
-      <TouchableOpacity style={styles.taskItem}>
-        <Text style={styles.taskText}>{t.task1}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.taskItem}>
-        <Text style={styles.taskText}>{t.task2}</Text>
-      </TouchableOpacity>
+      {safeRecords.length > 0 ? (
+        safeRecords.map((task) => (
+          <TouchableOpacity
+            key={task.TaskID}
+            style={styles.taskItem}
+            accessibilityLabel={`${task.Title}, Status: ${task.Status}`}
+          >
+            <Text style={styles.taskText}>{task.Title}</Text>
+            <Text style={styles.taskStatus}>
+              {t.status[task.Status.toLowerCase()] || task.Status}
+            </Text>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <Text style={styles.noTasksText}>No Tasks</Text>
+      )}
     </View>
   );
 
@@ -124,6 +144,7 @@ export default function TaskManager() {
         <TouchableOpacity
           style={[styles.tab, activeTab === "graph" && styles.activeTab]}
           onPress={() => setActiveTab("graph")}
+          accessibilityLabel={t.graph}
         >
           <Text
             style={[
@@ -137,6 +158,7 @@ export default function TaskManager() {
         <TouchableOpacity
           style={[styles.tab, activeTab === "tasks" && styles.activeTab]}
           onPress={() => setActiveTab("tasks")}
+          accessibilityLabel={t.tasks}
         >
           <Text
             style={[
@@ -149,7 +171,7 @@ export default function TaskManager() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         {activeTab === "graph" ? renderDonutChart() : renderTasks()}
       </ScrollView>
     </View>
@@ -188,7 +210,7 @@ const styles = StyleSheet.create({
     fontFamily: "SFPro-Semibold",
   },
   content: {
-    flex: 1,
+    paddingBottom: moderateScale(16), // Ensures content doesn't get cut off
   },
   chartContainer: {
     alignItems: "center",
@@ -202,6 +224,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
   },
   legendDot: {
     width: moderateScale(12),
@@ -227,5 +250,18 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     color: "#000",
     fontFamily: "SFPro-Regular",
+  },
+  taskStatus: {
+    fontSize: moderateScale(12),
+    color: "#666",
+    fontFamily: "SFPro-Regular",
+    marginTop: moderateScale(4),
+  },
+  noTasksText: {
+    fontSize: moderateScale(16),
+    color: "#666",
+    fontFamily: "SFPro-Regular",
+    textAlign: "center",
+    paddingVertical: moderateScale(20),
   },
 });
