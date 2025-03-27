@@ -7,6 +7,7 @@ import {
 } from "@/types/Apitypes";
 import axiosInstance from "../../index";
 import { API_ROUTES } from "../../routes.config";
+import { GET_ALL_INVENTORY_ITEMS_RESPONSE } from "@/types/NewApiTypes";
 
 /**
  * Add a new inventory item
@@ -39,7 +40,7 @@ export async function addInventoryItem(
 export async function getAllInventoryItems(
   projectId: string,
   authToken: string
-): Promise<ApiSuccessResponse<any>> {
+): Promise<ApiSuccessResponse> {
   try {
     const url =
       API_ROUTES.PROJECT_MAIN_USER.INVENTORY.GET_ALL_INVENTORY_ITEMS.replace(
@@ -47,7 +48,9 @@ export async function getAllInventoryItems(
         projectId
       );
 
-    const { data } = await axiosInstance.get<ApiResponse<any>>(url, {
+    const { data } = await axiosInstance.get<
+      ApiResponse<GET_ALL_INVENTORY_ITEMS_RESPONSE>
+    >(url, {
       headers: { authToken },
     });
 
@@ -55,6 +58,7 @@ export async function getAllInventoryItems(
       message: data.message,
       data: data as any,
     };
+    
   } catch (error) {
     throw error;
   }

@@ -9,7 +9,7 @@ import {
 import React, { useState } from "react";
 import CustomGaugeChart from "@/components/Chart/GaugeChart";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FileItem from "@/components/Card/FileCard";
 import AddUpdateResourceModal from "@/components/Modal/AddUpdateResourceModal";
@@ -17,6 +17,7 @@ import ResourceModal from "@/components/Modal/ResourceModal";
 import PopUpModal from "@/components/Modal/PopUpModal";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useAuthStore } from "@/store/authStore";
 
 const Id = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
@@ -24,9 +25,13 @@ const Id = () => {
   const [resourceModalVisible, setResourceModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [resourceTitle, setResourceTitle] = useState("");
-
+  const inventoryID = useLocalSearchParams();
+  const actualInventoryID = Array.isArray(inventoryID) ? inventoryID[0] : inventoryID;
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].inventory;
+  const authToken = useAuthStore.getState().token;
+
+  console.log(actualInventoryID, authToken);
 
   const handleActionPress = (action: string) => {
     if (

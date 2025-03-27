@@ -31,6 +31,7 @@ import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
 import { getProjectDetails } from "@/services/project_user/basic";
 import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { NEW_PROJECT_DETAILS } from "@/types/NewApiTypes";
 
 interface ProfileImage {
   id: string;
@@ -61,8 +62,7 @@ export default function ProjectDetails() {
   const authToken = useAuthStore.getState().token;
   console.log("Auth TOKEN:", authToken);
 
-  const [projectDetails, setProjectDetails] =
-    useState<ProjectDetailsResponse | null>(null);
+  const [projectDetails, setProjectDetails] = useState<NEW_PROJECT_DETAILS | null>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [checklistVisible, setChecklistVisible] = useState(false);
@@ -478,7 +478,7 @@ export default function ProjectDetails() {
             {t.sections.budget}
           </Text>
         </Pressable>
-        <BudgetScreen />
+        <BudgetScreen budgetDetails = {projectDetails?.budget || {}}/>
 
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.checklist}
@@ -488,14 +488,14 @@ export default function ProjectDetails() {
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.inventory}
         </Text>
-        <InventoryScreen />
+        <InventoryScreen inventory = {projectDetails?.inventory}/>
 
         <Pressable onPress={() => router.push("/log/projects/milestone")}>
           <Text style={[styles.title, { marginTop: 10 }]}>
             {t.sections.milestone}
           </Text>
         </Pressable>
-        <ProjectOverview />
+        <ProjectOverview milestoneData = {projectDetails?.milestones}/>
 
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.renderComparison}
@@ -639,7 +639,6 @@ export default function ProjectDetails() {
       try {
         const response = await getProjectDetails(projectId, authToken);
         setProjectDetails(response.data);
-        console.log(response.data);
       } catch (error) {
         console.error("Error fetching project details:", error);
       }
@@ -867,13 +866,12 @@ const styles = StyleSheet.create({
   },
   centerLabel: {
     position: "absolute",
-    top: moderateScale(-20),
+    top: moderateScale(-10),
     left: moderateScale(-25),
-    justifyContent: "center",
-    alignItems: "center",
+    fontSize: moderateScale(14),
   },
   percentageText: {
-    fontSize: moderateScale(32),
+    fontSize: moderateScale(15),
     fontWeight: "500",
     fontFamily: "SFPro-Semibold",
   },

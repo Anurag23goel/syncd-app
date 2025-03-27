@@ -11,6 +11,7 @@ import { moderateScale } from "@/utils/spacing";
 import { router } from "expo-router";
 import { translations } from "@/constants/translations";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { InventoryData } from "@/types/NewApiTypes"; // Ensure correct path
 
 interface Resource {
   name: string;
@@ -19,34 +20,49 @@ interface Resource {
   total: number;
 }
 
-const GaugeChart = () => {
+const GaugeChart = ({ inventory }: { inventory: InventoryData | undefined }) => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.inventory;
 
-  const pieData = [
-    {
-      value: 2,
-      color: "#007BFF",
-      text: `${t.chart.used}: 2 ${t.chart.units}`,
-    },
-    {
-      value: 2,
-      color: "#27AE60",
-      text: `${t.chart.left}: 2 ${t.chart.units}`,
-    },
-    {
-      value: 3,
-      color: "#E74C3C",
-      text: `${t.chart.damaged}: 3 ${t.chart.units}`,
-    },
-    { value: 5, color: "#EFEFEF", text: "" }, // Empty space to complete the semi-circle
-  ];
+  const pieData = inventory?.stats
+    ? [
+        {
+          value: inventory.stats.totalUsed || 0,
+          color: "#007BFF",
+          text: `${t.chart.used}: ${inventory.stats.totalUsed} ${t.chart.units}`,
+        },
+        {
+          value: inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged) || 0,
+          color: "#27AE60",
+          text: `${t.chart.left}: ${
+            inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged)
+          } ${t.chart.units}`,
+        },
+        {
+          value: inventory.stats.totalDamaged || 0,
+          color: "#E74C3C",
+          text: `${t.chart.damaged}: ${inventory.stats.totalDamaged} ${t.chart.units}`,
+        },
+        {
+          value: Math.max(
+            inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged + inventory.stats.totalDamaged),
+            0
+          ) || 5, // Filler for semi-circle
+          color: "#EFEFEF",
+          text: "",
+        },
+      ]
+    : [
+        { value: 2, color: "#007BFF", text: `${t.chart.used}: 2 ${t.chart.units}` },
+        { value: 2, color: "#27AE60", text: `${t.chart.left}: 2 ${t.chart.units}` },
+        { value: 3, color: "#E74C3C", text: `${t.chart.damaged}: 3 ${t.chart.units}` },
+        { value: 5, color: "#EFEFEF", text: "" },
+      ];
+
+  const total = inventory?.stats.totalAdded || 12;
 
   return (
-    <View
-      style={styles.chartContainer}
-      onTouchEnd={() => router.push("/log/inventory/id")}
-    >
+    <View style={styles.chartContainer} onTouchEnd={() => router.push("/log/inventory/id")}>
       <View style={styles.pieChartWrapper}>
         <PieChart
           data={pieData}
@@ -58,7 +74,7 @@ const GaugeChart = () => {
         />
         <View style={styles.centerTextContainer}>
           <Text style={styles.totalLabel}>{t.chart.total}</Text>
-          <Text style={styles.totalValue}>{`12 ${t.chart.units}`}</Text>
+          <Text style={styles.totalValue}>{`${total} ${t.chart.units}`}</Text>
         </View>
       </View>
       <View style={styles.legend}>
@@ -73,17 +89,34 @@ const GaugeChart = () => {
   );
 };
 
-export default function InventoryScreen() {
+export default function InventoryScreen({ inventory }: { inventory?: InventoryData }) {
+  
   const [activeTab, setActiveTab] = useState("graph");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.inventory;
 
-  const resources: Resource[] = [
-    { name: t.resource.name, type: t.resource.type, used: 10, total: 100 },
-    { name: t.resource.name, type: t.resource.type, used: 20, total: 100 },
-    { name: t.resource.name, type: t.resource.type, used: 30, total: 100 },
-    { name: t.resource.name, type: t.resource.type, used: 40, total: 100 },
-  ];
+  // Calculate used quantities from transactions
+  const calculateUsed = (inventoryId: string) => {
+    return (
+      inventory?.transactions
+        ?.filter((trx) => trx.InventoryID === inventoryId && trx.TransactionType === "USED")
+        .reduce((sum, trx) => sum + (trx.Quantity || 0), 0) || 0
+    );
+  };
+
+  const resources: Resource[] = inventory?.records?.length
+    ? inventory.records.map((item) => ({
+        name: item.ResourceName,
+        type: item.Category,
+        used: calculateUsed(item.InventoryID),
+        total: item.TotalQuantity,
+      }))
+    : [
+        { name: t.resource.name, type: t.resource.type, used: 10, total: 100 },
+        { name: t.resource.name, type: t.resource.type, used: 20, total: 100 },
+        { name: t.resource.name, type: t.resource.type, used: 30, total: 100 },
+        { name: t.resource.name, type: t.resource.type, used: 40, total: 100 },
+      ];
 
   return (
     <View style={styles.container}>
@@ -119,7 +152,7 @@ export default function InventoryScreen() {
 
       {/* Content */}
       {activeTab === "graph" ? (
-        <GaugeChart />
+        <GaugeChart inventory={inventory} />
       ) : (
         <ScrollView style={styles.listContainer}>
           {resources.map((resource, index) => (
@@ -129,7 +162,7 @@ export default function InventoryScreen() {
                 <Text style={styles.resourceType}>({resource.type})</Text>
               </View>
               <Text style={styles.resourceQuantity}>
-                {`${resource.used}/${resource.total} kgs`}
+                {`${resource.used}/${resource.total} units`}
               </Text>
             </View>
           ))}
@@ -145,11 +178,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
-  },
-  title: {
-    fontSize: moderateScale(28),
-    marginBottom: moderateScale(16),
-    fontFamily: "SFPro-Bold",
   },
   tabContainer: {
     flexDirection: "row",

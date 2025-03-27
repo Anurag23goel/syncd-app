@@ -8,6 +8,10 @@ import {
 } from "@/types/Apitypes";
 import axiosInstance from "../index";
 import { API_ROUTES } from "../routes.config";
+import {
+  NEW_CHAT_RESPONSE_TYPE,
+  PARTICULAR_CHAT_WITH_USER_RESPONSE_TYPE,
+} from "@/types/NewApiTypes";
 
 export async function createChatRoom(
   authToken: string,
@@ -60,12 +64,12 @@ export async function searchUser(
 
 export async function fetchUserAllChats(
   authToken: string
-): Promise<ApiSuccessResponse<HomeScreenChatResponse>> {
+): Promise<ApiSuccessResponse> {
   console.log(authToken);
 
   try {
     const { data } = await axiosInstance.get<
-      ApiResponse<HomeScreenChatResponse>
+      ApiResponse<NEW_CHAT_RESPONSE_TYPE>
     >(API_ROUTES.CHAT.FETCH_USER_ALL_CHATS, {
       headers: {
         authToken,
@@ -84,25 +88,26 @@ export async function fetchUserAllChats(
 export async function fetchMessagesForParticularChat(
   authToken: string,
   chatRoomId: string
-): Promise<ParticularChatResponse> {
+): Promise<ApiSuccessResponse> {
   try {
-    const { data } = await axiosInstance.get<ParticularChatResponse>(
-      API_ROUTES.CHAT.FETCH_CHAT_MESSAGES_WITH_PARTICULAR_USER.replace(
-        "{{chatroomID}}",
-        chatRoomId
-      ),
-      {
-        headers: {
-          authToken: authToken,
-        },
-      }
-    );
+    const { data } =
+      await axiosInstance.get<PARTICULAR_CHAT_WITH_USER_RESPONSE_TYPE>(
+        API_ROUTES.CHAT.FETCH_CHAT_MESSAGES_WITH_PARTICULAR_USER.replace(
+          "{{chatroomID}}",
+          chatRoomId
+        ),
+        {
+          headers: {
+            authToken: authToken,
+          },
+        }
+      );
+
+    // console.log(data);
 
     return {
       success: data.success,
-      chatRoom: data.chatRoom,
-      messages: data.messages,
-      unreadMessagesMarkedAsRead: data.unreadMessagesMarkedAsRead,
+      data: data as any,
     };
   } catch (error) {
     throw error;

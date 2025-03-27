@@ -17,10 +17,11 @@ import { translations } from "@/constants/translations";
 import { getAllUserProjects } from "@/services/project_other_user";
 import { ProjectDetailsResponse } from "@/types/Apitypes";
 import { useAuthStore } from "@/store/authStore";
+import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
 
 interface ProjectCardProps {
   title: string;
-  location: string;
+  location: string | null;
   imgSrc:string
   handleClick: () => void;
 }
@@ -50,7 +51,7 @@ const FileSpaceScreen: React.FC = () => {
   const t = translations[language].tabs;
 
   const [allProjects, setAllProjects] = useState<
-    ProjectDetailsResponse[] | null
+    SINGLE_PROJECT_DETAILS[] | null
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

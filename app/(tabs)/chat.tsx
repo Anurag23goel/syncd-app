@@ -19,6 +19,7 @@ import { translations } from "@/constants/translations";
 import { fetchUserAllChats } from "@/services/chat";
 import { useAuthStore } from "@/store/authStore";
 import { ChatRoom } from "@/types/Apitypes";
+import { CHAT_ROOM_TYPE } from "@/types/NewApiTypes";
 
 export default function ChatScreen() {
   const language = useLanguageStore((state) => state.language);
@@ -28,7 +29,7 @@ export default function ChatScreen() {
   const [activeTab, setActiveTab] = useState("All");
   const [isModalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [defaultChats, setDefaultChats] = useState<ChatRoom[]>([]);
+  const [defaultChats, setDefaultChats] = useState<CHAT_ROOM_TYPE[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchAllChatsForDefaultScreen = async () => {
@@ -39,10 +40,10 @@ export default function ChatScreen() {
       }
 
       setLoading(true);
-      const response = await fetchUserAllChats(authToken); // Replace with your API call
-      const chats = response.data?.chatRooms || [];
+      const response = await fetchUserAllChats(authToken);
+      const chats = response.data?.chatRooms;
 
-      setDefaultChats(chats);
+      setDefaultChats(chats || []);
     } catch (error) {
       console.error("Error fetching chats:", error);
     } finally {
@@ -63,9 +64,7 @@ export default function ChatScreen() {
     }
   };
 
-  const renderChatItem = (chat: ChatRoom) => {
-    const otherUser = chat.Members.find((m) => !m.IsCurrentUser);
-
+  const renderChatItem = (chat: CHAT_ROOM_TYPE) => {
     return (
       <TouchableOpacity
         style={styles.chatItem}
@@ -73,30 +72,25 @@ export default function ChatScreen() {
       >
         <Image
           source={{
-            uri:
-              otherUser?.UserProfilePicture ||
-              "https://via.placeholder.com/100",
+            uri: chat.DisplayPicture || "https://i.sstatic.net/34AD2.jpg",
           }}
           style={styles.avatar}
         />
         <View style={styles.chatInfo}>
           <View style={styles.chatHeader}>
-            <Text style={styles.chatName}>{otherUser?.UserFullName}</Text>
+            <Text style={styles.chatName}>{chat.DisplayName || "Unknown"}</Text>
             <Text style={styles.timeAgo}>
-              {chat.LastMessage
-                ? new Date(chat.LastMessage.CreatedAt).toLocaleTimeString(
-                    "en-US",
-                    {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    }
-                  )
+              {chat.LastMessage?.content
+                ? new Date(chat.LastMessage.time).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
                 : ""}
             </Text>
           </View>
           <View style={styles.chatFooter}>
             <Text style={styles.lastMessage} numberOfLines={1}>
-              {chat.LastMessage?.Content || ""}
+              {chat.LastMessage?.content || "No messages yet"}
             </Text>
             {(chat.UnreadCount ?? 0) > 0 && (
               <View style={styles.unreadBadge}>
@@ -110,10 +104,9 @@ export default function ChatScreen() {
   };
 
   const filteredChats = defaultChats.filter((chat) =>
-    chat.Members.find((m) => !m.IsCurrentUser)
-      ?.UserFullName.toLowerCase()
-      .includes(searchQuery.toLowerCase())
+    (chat.DisplayName || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   const handleModalClose = () => {
     setSearchQuery("");
     setModalVisible(false);
@@ -171,7 +164,7 @@ export default function ChatScreen() {
           showsVerticalScrollIndicator={false}
           refreshing={loading}
           onRefresh={() => {
-            setSearchQuery(""); // clear search on pull refresh
+            setSearchQuery("");
             setDefaultChats([]);
             setTimeout(() => {
               fetchAllChatsForDefaultScreen();

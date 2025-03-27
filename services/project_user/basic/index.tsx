@@ -64,18 +64,17 @@ export async function addUserToProject(
 export async function getProjectDetails(
   projectId: string,
   authToken: string
-): Promise<ApiSuccessResponse<ProjectDetailsResponse>> {
+): Promise<ApiSuccessResponse> {
   try {
     const url = API_ROUTES.PROJECT_MAIN_USER.BASIC.GET_PROJECT_DETAILS.replace(
       "{{ProjectID}}",
       projectId
     );
 
-    const { data } = await axiosInstance.get<
-      ApiResponse<ProjectDetailsResponse>
-    >(url, {
+    const { data } = await axiosInstance.get<ApiResponse>(url, {
       headers: { authToken },
     });
+
 
     return {
       message: data.message,

@@ -4,25 +4,17 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  FlatList,
   Dimensions,
   ScrollView,
-  TextInput,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { moderateScale } from "@/utils/spacing";
 import Timeline from "react-native-timeline-flatlist";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { MilestoneData } from "@/types/NewApiTypes"; // Ensure correct path
 
 const { width } = Dimensions.get("window");
-
-interface Milestone {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-}
 
 interface MilestoneType {
   time: string;
@@ -32,123 +24,133 @@ interface MilestoneType {
   lineColor: string;
 }
 
-const chartData = {
-  labels: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-  ],
-  datasets: [
-    {
-      data: [20, 45, 28, 80, 99, 43, 50, 70, 30, 60],
-      color: (opacity = 1) => `rgba(0, 29, 255, ${opacity})`,
-      strokeWidth: 2,
-    },
-    {
-      data: [10, 30, 20, 50, 70, 30, 40, 60, 20, 40],
-      color: (opacity = 1) => `rgba(255, 118, 100, ${opacity})`,
-      strokeWidth: 2,
-    },
-  ],
-};
-
-export default function ProjectOverview() {
+export default function ProjectOverview({ milestoneData }: { milestoneData?: MilestoneData }) {
+  
   const [activeTab, setActiveTab] = useState("graph");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog.milestone;
 
-  const generateMilestones = () => {
-    const milestoneKeys = Object.keys(t.milestones);
-    return milestoneKeys.map((key, index) => ({
-      time: (index + 1).toString(),
-      title: t.milestones[key as keyof typeof t.milestones].title,
-      description: t.milestones[key as keyof typeof t.milestones].description,
-      circleColor: "#FFB800",
+  // Dynamic chart data based on milestone records
+  const generateChartData = () => {
+    if (!milestoneData?.records.length) {
+      return {
+        labels: ["No Data"],
+        datasets: [
+          { data: [0], color: (opacity = 1) => `rgba(0, 29, 255, ${opacity})`, strokeWidth: 2 },
+          { data: [0], color: (opacity = 1) => `rgba(255, 118, 100, ${opacity})`, strokeWidth: 2 },
+        ],
+      };
+    }
+
+    // Sort milestones by date (assuming a date field like `dueDate` or `createdAt`)
+    const sortedMilestones = milestoneData.records.sort((a, b) => {
+      const dateA = new Date(a.dueDate || a.createdAt || "2025-01-01").getTime();
+      const dateB = new Date(b.dueDate || b.createdAt || "2025-01-01").getTime();
+      return dateA - dateB;
+    });
+
+    const labels = sortedMilestones.map((m) =>
+      new Date(m.dueDate || m.createdAt || "2025-01-01").toLocaleString("default", { month: "short" })
+    );
+    const completedData = sortedMilestones.map((m) => (m.status === "completed" ? 100 : 0));
+    const pendingData = sortedMilestones.map((m) => (m.status === "pending" ? 100 : 0));
+
+    return {
+      labels: [...new Set(labels)], // Remove duplicate months
+      datasets: [
+        {
+          data: completedData,
+          color: (opacity = 1) => `rgba(0, 29, 255, ${opacity})`, // Blue for completed
+          strokeWidth: 2,
+        },
+        {
+          data: pendingData,
+          color: (opacity = 1) => `rgba(255, 118, 100, ${opacity})`, // Red for pending
+          strokeWidth: 2,
+        },
+      ],
+    };
+  };
+
+  const chartData = generateChartData();
+
+  // Dynamic timeline data based on milestone records
+  const generateMilestones = (): MilestoneType[] => {
+    if (!milestoneData?.records.length) {
+      return [
+        {
+          time: "N/A",
+          title: t.noMilestones || "No Milestones",
+          description: "No milestones available",
+          circleColor: "#666",
+          lineColor: "#E5E5E5",
+        },
+      ];
+    }
+
+    return milestoneData.records.map((m, index) => ({
+      time: new Date(m.dueDate || m.createdAt || "2025-01-01").toLocaleDateString(),
+      title: m.title || `Milestone ${index + 1}`,
+      description: m.description || "No description provided",
+      circleColor: m.status === "completed" ? "#4CAF50" : "#FFB800", // Green for completed, yellow for pending
       lineColor: "#E5E5E5",
     }));
   };
 
-  const milestones: MilestoneType[] = generateMilestones();
+  const milestones = generateMilestones();
 
-  const renderDetail = (rowData: MilestoneType) => {
-    return (
-      <View style={styles.detailContainer}>
-        <Text style={styles.title}>{rowData.title}</Text>
-        <Text style={styles.description}>{rowData.description}</Text>
-        <Text
-          style={{
-            fontSize: 12,
-            color: "#666",
-            fontFamily: "SFPro-Light",
-            marginTop: 8,
-          }}
-        >
-          {t.timeDate}
-        </Text>
-      </View>
-    );
-  };
+  const renderDetail = (rowData: MilestoneType) => (
+    <View style={styles.detailContainer}>
+      <Text style={styles.title}>{rowData.title}</Text>
+      <Text style={styles.description}>{rowData.description}</Text>
+      <Text style={{ fontSize: 12, color: "#666", fontFamily: "SFPro-Light", marginTop: 8 }}>
+        {rowData.time}
+      </Text>
+    </View>
+  );
 
-  const renderTime = (rowData: MilestoneType) => {
-    return (
-      <View style={styles.timeContainer}>
-        <Text style={styles.timeText}>{rowData.time}</Text>
-      </View>
-    );
-  };
+  const renderTime = (rowData: MilestoneType) => (
+    <View style={styles.timeContainer}>
+      <Text style={styles.timeText}>
+        {rowData.time === "N/A" ? "N/A" : new Date(rowData.time).getDate()}
+      </Text>
+    </View>
+  );
 
   const renderGraph = () => (
     <View>
       <View style={styles.graphContainer}>
         <Text style={styles.graphTitle}>{t.progressOverview}</Text>
-        <Text style={styles.graphSubtitle}>Jan 14 - Oct 30</Text>
-        <View
-          style={{
-            flex: 1,
-            position: "absolute",
-            left: -30,
-            bottom: 0,
+        <Text style={styles.graphSubtitle}>
+          {milestoneData?.records.length
+            ? `${new Date(milestoneData.records[0].dueDate || milestoneData.records[0].createdAt || "2025-01-01").toLocaleString("default", { month: "short" })} - ${new Date(
+                milestoneData.records[milestoneData.records.length - 1].dueDate || milestoneData.records[milestoneData.records.length - 1].createdAt || "2025-01-01"
+              ).toLocaleString("default", { month: "short" })}`
+            : "No Data"}
+        </Text>
+        <LineChart
+          data={chartData}
+          width={width}
+          height={250}
+          chartConfig={{
+            backgroundColor: "#ffffff",
+            backgroundGradientFrom: "#ffffff",
+            backgroundGradientTo: "#ffffff",
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            fillShadowGradient: "#4183D7",
+            fillShadowGradientOpacity: 0.2,
+            propsForBackgroundLines: { strokeWidth: 0 },
+            propsForDots: { r: "0" },
+            propsForHorizontalLabels: { opacity: 0 },
+            propsForVerticalLabels: { opacity: 0 },
           }}
-        >
-          <LineChart
-            data={chartData}
-            width={width} // Changed to take full width
-            height={250}
-            chartConfig={{
-              backgroundColor: "#ffffff",
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              fillShadowGradient: "#4183D7",
-              fillShadowGradientOpacity: 0.2,
-              propsForBackgroundLines: {
-                strokeWidth: 0, // Removes background lines
-              },
-              propsForDots: {
-                r: "0",
-              },
-              propsForHorizontalLabels: {
-                opacity: 0, // Hides horizontal axis labels
-              },
-              propsForVerticalLabels: {
-                opacity: 0, // Hides vertical axis labels
-              },
-            }}
-            bezier
-            withHorizontalLabels={false} // Removes horizontal labels
-            withVerticalLabels={false} // Removes vertical labels
-            withInnerLines={false} // Removes gridlines
-            style={styles.chart}
-          />
-        </View>
+          bezier
+          withHorizontalLabels={false}
+          withVerticalLabels={false}
+          withInnerLines={false}
+          style={styles.chart}
+        />
       </View>
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
@@ -164,25 +166,23 @@ export default function ProjectOverview() {
   );
 
   const renderMap = () => (
-    <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.scrollableContent}>
-        <View style={{ paddingHorizontal: 24 }}>
-          <Timeline
-            data={milestones}
-            circleSize={40}
-            circleColor="#FFB800"
-            lineColor="#E8E8E8"
-            lineWidth={6}
-            timeContainerStyle={styles.timeContainerStyle}
-            descriptionStyle={styles.descriptionStyle}
-            style={styles.timelineStyle}
-            innerCircle="dot"
-            renderDetail={renderDetail}
-            renderTime={renderTime}
-          />
-        </View>
-      </ScrollView>
-    </View>
+    <ScrollView contentContainerStyle={styles.scrollableContent}>
+      <View style={{ paddingHorizontal: 24 }}>
+        <Timeline
+          data={milestones}
+          circleSize={40}
+          circleColor="#FFB800"
+          lineColor="#E8E8E8"
+          lineWidth={6}
+          timeContainerStyle={styles.timeContainerStyle}
+          descriptionStyle={styles.descriptionStyle}
+          style={styles.timelineStyle}
+          innerCircle="dot"
+          renderDetail={renderDetail}
+          renderTime={renderTime}
+        />
+      </View>
+    </ScrollView>
   );
 
   return (
@@ -256,12 +256,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: "SFPro-Semibold",
   },
-
   content: {
     flex: 1,
   },
   scrollableContent: {
-    flex: 1,
+    paddingBottom: moderateScale(20),
   },
   graphContainer: {
     padding: moderateScale(16),
@@ -306,54 +305,6 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: moderateScale(14),
     color: "#666",
-    fontFamily: "SFPro-Regular",
-  },
-  mapContainer: {
-    padding: moderateScale(16),
-    flex: 1, // Make the milestone container scrollable
-  },
-  milestoneContainer: {
-    flexDirection: "row",
-    marginBottom: moderateScale(24),
-  },
-  milestoneIconContainer: {
-    alignItems: "center",
-    marginRight: moderateScale(16),
-  },
-  milestoneIcon: {
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: "#FFB340",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  milestoneIconText: {
-    color: "#fff",
-    fontSize: moderateScale(16),
-    fontFamily: "SFPro-Bold",
-  },
-  milestoneLine: {
-    width: moderateScale(2),
-    flex: 1,
-    backgroundColor: "#FFB340",
-  },
-  milestoneContent: {
-    flex: 1,
-  },
-  milestoneTitle: {
-    fontSize: moderateScale(18),
-    fontFamily: "SFPro-Bold",
-  },
-  milestoneDescription: {
-    fontSize: moderateScale(14),
-    color: "#666",
-    marginBottom: moderateScale(4),
-    fontFamily: "SFPro-Regular",
-  },
-  milestoneDate: {
-    fontSize: moderateScale(12),
-    color: "#999",
     fontFamily: "SFPro-Regular",
   },
   timeContainer: {

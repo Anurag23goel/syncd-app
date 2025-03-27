@@ -6,7 +6,8 @@ import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 
-const BudgetScreen = () => {
+const BudgetScreen = ({budgetDetails}) => {
+  
   const [activeTab, setActiveTab] = useState("graph");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog.budget;

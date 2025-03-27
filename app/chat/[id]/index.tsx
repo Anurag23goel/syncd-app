@@ -23,6 +23,10 @@ import { fetchMessagesForParticularChat } from "@/services/chat";
 import { ChatMessage, ChatRoomMember } from "@/types/Apitypes";
 import { Linking } from "react-native";
 import socket, { connectSocketWithToken } from "@/app/socket";
+import {
+  CHAT_MESSAGES,
+  PARTICULAR_CHAT_WITH_USER_RESPONSE_TYPE,
+} from "@/types/NewApiTypes";
 
 interface SocketMessageToSend {
   roomId: string;
@@ -43,23 +47,30 @@ const ChatScreen = () => {
 
   const authToken = useAuthStore.getState().token;
   const user = useAuthStore.getState().user;
-  const currentUserID = user.UserID;
+  const currentUserID = user?.UserID;
 
-  const [actualMessages, setActualMessages] = useState<ChatMessage[]>([]);
+  const [actualMessages, setActualMessages] = useState<CHAT_MESSAGES[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sendersDetails, setSendersDetails] = useState<ChatRoomMember>({
+  const [sendersDetails, setSendersDetails] = useState<{
+    UserID: string;
+    UserFullName: string;
+    UserProfilePicture: string | null;
+    UserContact: string | null;
+    UserEmail: string | null;
+    IsCurrentUser: boolean;
+  }>({
     UserID: "",
     UserFullName: "",
-    UserProfilePicture: "",
-    UserContact: "",
+    UserProfilePicture: null,
+    UserContact: null,
     UserEmail: "",
     IsCurrentUser: false,
   });
 
   useEffect(() => {
-    if (!authToken || !chatRoomID) return;
+    if (!authToken || !chatRoomID || !currentUserID) return;
 
     const fetchMessages = async () => {
       try {
@@ -68,12 +79,22 @@ const ChatScreen = () => {
           authToken,
           chatRoomID
         );
-        setActualMessages(response.messages);
+        // Map messages and ensure all required fields are present
+        const messages = response.data.messages.map((msg: CHAT_MESSAGES) => ({
+          ...msg,
+          RoomID: chatRoomID, // Add RoomID if not in API response
+        }));
+        setActualMessages(messages.reverse()); // Newest first
 
-        const sender =
-          response.chatRoom.Members.find((m) => m.UserID !== currentUserID) ||
-          response.chatRoom.Members[1];
-        setSendersDetails(sender);
+        // Since API doesn't provide Members, use RoomName as fallback for sender's name
+        setSendersDetails({
+          UserID: "", // No sender ID available for non-current user
+          UserFullName: response.data.chatRoom.RoomName || "Unknown",
+          UserProfilePicture: null, // No profile picture in data
+          UserContact: null, // No contact in data
+          UserEmail: "", // No email in data
+          IsCurrentUser: false,
+        });
       } catch (error) {
         console.error("Error fetching messages:", error);
       } finally {
@@ -82,81 +103,64 @@ const ChatScreen = () => {
     };
 
     fetchMessages();
-  }, [authToken, chatRoomID]); // ✅ don't include actualMessages
+  }, [authToken, chatRoomID, currentUserID]);
 
-  // THIS IS THE LOGIC FOR UPDATING ACTUAL MESSAGES
   useEffect(() => {
-    if (!authToken) {
-      return;
-    }
-    connectSocketWithToken(authToken);
+    if (!authToken || !chatRoomID) return;
 
+    connectSocketWithToken(authToken);
     socket.emit("join-room", chatRoomID);
 
     socket.on("new-message", (message: any) => {
       if (message.RoomID === chatRoomID) {
-        const messageToBeAdded: ChatMessage = {
-          MessageID: message.MessageID,
-          RoomID: message.RoomID,
-          SenderID: message.SenderID, // ✅ Fix this
-          MessageType: message.MessageType,
+        const messageToBeAdded: CHAT_MESSAGES = {
+          MessageID: message.MessageID || `temp-${Date.now()}`,
+          SenderID: message.SenderID,
           Content: message.Content,
-          FileURL: message.FileURL ?? null,
-          FileName: message.FileName ?? null,
-          FileType: message.FileType ?? null,
-          ReadBy: message.ReadBy ?? [],
-          createdAt: message.createdAt
-            ? new Date(message.createdAt)
-            : new Date(),
-          updatedAt: message.updatedAt
-            ? new Date(message.updatedAt)
-            : new Date(),
+          MessageType: message.MessageType || "TEXT",
         };
 
-        setActualMessages((prev) => [messageToBeAdded, ...prev]);
+        setActualMessages((prev) => {
+          // Prevent duplicates
+          if (prev.some((m) => m.MessageID === messageToBeAdded.MessageID)) {
+            return prev;
+          }
+          return [messageToBeAdded, ...prev];
+        });
       }
     });
 
     return () => {
+      socket.off("new-message");
       socket.disconnect();
     };
-  }, [chatRoomID, currentUserID]);
+  }, [authToken, chatRoomID]);
 
-  // SOCKET LOGIC FOR SENDING MESSAGE
   const handleSendMessage = useCallback(() => {
-    if (!newMessage.trim()) return;
-    // When a new message sent from the server
+    if (!newMessage.trim() || !chatRoomID || !currentUserID) return;
+
     const messageToBeSent: SocketMessageToSend = {
       roomId: chatRoomID,
       content: newMessage,
       messageType: "TEXT",
     };
 
-    const tempMessage: ChatMessage = {
-      MessageID: `temp-${Date.now()}`, // temporary ID
-      RoomID: chatRoomID,
-      SenderID: currentUserID, // from your auth store
-      MessageType: "TEXT",
+    const tempMessage: CHAT_MESSAGES = {
+      MessageID: `temp-${Date.now()}`,
+      SenderID: currentUserID,
       Content: newMessage,
-      FileURL: null,
-      FileName: null,
-      FileType: null,
-      ReadBy: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      MessageType: "TEXT",
     };
 
-    // Optimistically update the UI
+    // Optimistically update UI
     setActualMessages((prev) => [tempMessage, ...prev]);
-
-    // Emit to server
     socket.emit("send-message", messageToBeSent);
 
-    console.log("Send:", newMessage);
+    console.log("Sent:", newMessage);
     setNewMessage("");
-  }, [newMessage]);
+  }, [newMessage, chatRoomID, currentUserID]);
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => {
+  const renderMessage = ({ item }: { item: CHAT_MESSAGES }) => {
     const isSender = item.SenderID === currentUserID;
 
     return (
@@ -175,13 +179,14 @@ const ChatScreen = () => {
             {item.Content}
           </Text>
         </View>
+        {/* Timestamp not in API data, using current time as fallback */}
         <Text
           style={[
             styles.timestamp,
             isSender ? styles.sentTimestamp : styles.receivedTimestamp,
           ]}
         >
-          {new Date(item.createdAt).toLocaleTimeString("en-US", {
+          {new Date().toLocaleTimeString("en-US", {
             hour: "numeric",
             minute: "2-digit",
           })}
@@ -206,22 +211,21 @@ const ChatScreen = () => {
             <Image
               source={{
                 uri:
-                  sendersDetails?.UserProfilePicture ||
+                  sendersDetails.UserProfilePicture ||
                   "https://i.sstatic.net/34AD2.jpg",
               }}
               style={styles.profileImage}
             />
             <View>
               <Text style={styles.headerTitle}>
-                {sendersDetails?.UserFullName || "User"}
+                {sendersDetails.UserFullName || "User"}
               </Text>
               <Text style={styles.onlineStatus}>{t.online}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Call Button */}
-        {sendersDetails?.UserContact && (
+        {sendersDetails.UserContact && (
           <TouchableOpacity
             onPress={() => Linking.openURL(`tel:${sendersDetails.UserContact}`)}
             style={styles.callButton}
@@ -240,6 +244,7 @@ const ChatScreen = () => {
           renderItem={renderMessage}
           keyExtractor={(item) => item.MessageID}
           contentContainerStyle={styles.chatContainer}
+          inverted // Newest messages at the bottom
         />
       )}
 
@@ -296,7 +301,6 @@ const ChatScreen = () => {
                       marginBottom: 24,
                     }}
                   >
-                    {/* Left: Profile Image + Name */}
                     <View
                       style={{
                         flexDirection: "row",
@@ -317,7 +321,6 @@ const ChatScreen = () => {
                       </Text>
                     </View>
 
-                    {/* Right: Call Button */}
                     <TouchableOpacity
                       onPress={() => {
                         if (sendersDetails.UserContact) {

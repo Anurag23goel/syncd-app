@@ -1,4 +1,5 @@
 import {
+  ApiErrorResponse,
   ApiResponse,
   ApiSuccessResponse,
   ProjectDetailsResponse,
@@ -7,6 +8,7 @@ import {
 import axiosInstance from "../index";
 import { API_ROUTES } from "../routes.config";
 import axios from "axios";
+import { GET_ALL_PROJECTS_FOR_USER } from "@/types/NewApiTypes";
 
 /**
  * Get all projects for the logged-in user
@@ -15,16 +17,15 @@ import axios from "axios";
  */
 export async function getAllUserProjects(
   authToken: string
-): Promise<ApiSuccessResponse<SingleProjectDetails[]>> {
+): Promise<ApiSuccessResponse> {
   try {
     const { data } = await axiosInstance.get<
-      ApiResponse<SingleProjectDetails[]>
+      ApiResponse<GET_ALL_PROJECTS_FOR_USER>
     >(API_ROUTES.PROJECT_OTHER_USER.GET_ALL_PROJECTS, {
       headers: {
-        authToken: authToken, // Sending auth token in header
+        authToken, // Sending auth token in header
       },
     });
-
 
     return {
       message: data.message,

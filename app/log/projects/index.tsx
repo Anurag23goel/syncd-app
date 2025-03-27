@@ -19,10 +19,11 @@ import { translations } from "@/constants/translations";
 import { ProjectDetailsResponse, ProjectResponse } from "@/types/Apitypes";
 import { getAllUserProjects } from "@/services/project_other_user";
 import { useAuthStore } from "@/store/authStore";
+import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
 
 interface InventoryCardProps {
   title: string;
-  location: string;
+  location: string | null;
   handleClick: () => void;
   imgSrc?: string;
   IsCompleted?: boolean; // New prop to check if it's in the Completed tab
@@ -134,7 +135,7 @@ const ProjectScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Active");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.projects;
-  const [projects, setProjectsData] = useState<ProjectDetailsResponse[]>([]);
+  const [projects, setProjectsData] = useState<SINGLE_PROJECT_DETAILS[]>([]);
 
   useEffect(() => {
     const fetchRecentProjects = async () => {
@@ -145,6 +146,7 @@ const ProjectScreen: React.FC = () => {
           console.error("No auth token found!");
           return;
         }
+        console.log(authToken);
 
         const response = await getAllUserProjects(authToken);
 
@@ -214,7 +216,9 @@ const ProjectScreen: React.FC = () => {
             title={project.ProjectName}
             location={project.ProjectLocation}
             imgSrc={project.ProjectThumbnail || ""}
-            handleClick={() => router.push(`/log/projects/${project.ProjectID}`)}
+            handleClick={() =>
+              router.push(`/log/projects/${project.ProjectID}`)
+            }
             IsCompleted={project.IsCompleted && activeTab === "Completed"}
           />
         ))}

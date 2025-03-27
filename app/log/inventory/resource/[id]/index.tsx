@@ -19,8 +19,9 @@ import { translations } from "@/constants/translations";
 import AddUpdateResourceModal from "@/components/Modal/AddUpdateResourceModal";
 import type { InventoryItemNew } from "@/types/Apitypes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SINGLE_INVENTORY_ITEM } from "@/types/NewApiTypes";
 
-const ResourceCard: React.FC<InventoryItemNew> = ({
+const ResourceCard: React.FC<SINGLE_INVENTORY_ITEM> = ({
   InventoryID,
   ResourceName,
   BrandName,
@@ -36,8 +37,8 @@ const ResourceCard: React.FC<InventoryItemNew> = ({
   const t = translations[language].inventory.resourceDetails;
 
   return (
-    <View
-      // onPress={() => router.push(`/log/inventory/${InventoryID}`)}
+    <TouchableOpacity
+      onPress={() => router.push(`/log/inventory/${InventoryID}`)}
       style={styles.card}
     >
       <View style={{ flex: 1 }}>
@@ -70,7 +71,7 @@ const ResourceCard: React.FC<InventoryItemNew> = ({
           {t.lastUpdated}: {new Date(updatedAt).toLocaleDateString()}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -82,7 +83,7 @@ const ResourceScreen: React.FC = () => {
   const authToken = useAuthStore.getState().token;
   const insets = useSafeAreaInsets();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [resources, setResources] = useState<InventoryItemNew[]>([]);
+  const [resources, setResources] = useState<SINGLE_INVENTORY_ITEM[]>([]);
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -90,6 +91,7 @@ const ResourceScreen: React.FC = () => {
       try {
         const response = await getAllInventoryItems(projectID, authToken);
         setResources(response.data?.inventory || []);
+        
       } catch (error) {
         console.error("Error fetching inventory:", error);
       }
