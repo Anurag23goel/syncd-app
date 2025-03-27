@@ -18,9 +18,14 @@ interface Resource {
   type: string;
   used: number;
   total: number;
+  id: string;
 }
 
-const GaugeChart = ({ inventory }: { inventory: InventoryData | undefined }) => {
+const GaugeChart = ({
+  inventory,
+}: {
+  inventory: InventoryData | undefined;
+}) => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.inventory;
 
@@ -32,10 +37,13 @@ const GaugeChart = ({ inventory }: { inventory: InventoryData | undefined }) => 
           text: `${t.chart.used}: ${inventory.stats.totalUsed} ${t.chart.units}`,
         },
         {
-          value: inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged) || 0,
+          value:
+            inventory.stats.totalAdded -
+              (inventory.stats.totalUsed + inventory.stats.totalDamaged) || 0,
           color: "#27AE60",
           text: `${t.chart.left}: ${
-            inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged)
+            inventory.stats.totalAdded -
+            (inventory.stats.totalUsed + inventory.stats.totalDamaged)
           } ${t.chart.units}`,
         },
         {
@@ -44,25 +52,41 @@ const GaugeChart = ({ inventory }: { inventory: InventoryData | undefined }) => 
           text: `${t.chart.damaged}: ${inventory.stats.totalDamaged} ${t.chart.units}`,
         },
         {
-          value: Math.max(
-            inventory.stats.totalAdded - (inventory.stats.totalUsed + inventory.stats.totalDamaged + inventory.stats.totalDamaged),
-            0
-          ) || 5, // Filler for semi-circle
+          value:
+            Math.max(
+              inventory.stats.totalAdded -
+                (inventory.stats.totalUsed +
+                  inventory.stats.totalDamaged +
+                  inventory.stats.totalDamaged),
+              0
+            ) || 5, // Filler for semi-circle
           color: "#EFEFEF",
           text: "",
         },
       ]
     : [
-        { value: 2, color: "#007BFF", text: `${t.chart.used}: 2 ${t.chart.units}` },
-        { value: 2, color: "#27AE60", text: `${t.chart.left}: 2 ${t.chart.units}` },
-        { value: 3, color: "#E74C3C", text: `${t.chart.damaged}: 3 ${t.chart.units}` },
+        {
+          value: 2,
+          color: "#007BFF",
+          text: `${t.chart.used}: 2 ${t.chart.units}`,
+        },
+        {
+          value: 2,
+          color: "#27AE60",
+          text: `${t.chart.left}: 2 ${t.chart.units}`,
+        },
+        {
+          value: 3,
+          color: "#E74C3C",
+          text: `${t.chart.damaged}: 3 ${t.chart.units}`,
+        },
         { value: 5, color: "#EFEFEF", text: "" },
       ];
 
   const total = inventory?.stats.totalAdded || 12;
 
   return (
-    <View style={styles.chartContainer} onTouchEnd={() => router.push("/log/inventory/id")}>
+    <View style={styles.chartContainer}>
       <View style={styles.pieChartWrapper}>
         <PieChart
           data={pieData}
@@ -89,8 +113,11 @@ const GaugeChart = ({ inventory }: { inventory: InventoryData | undefined }) => 
   );
 };
 
-export default function InventoryScreen({ inventory }: { inventory?: InventoryData }) {
-  
+export default function InventoryScreen({
+  inventory,
+}: {
+  inventory?: InventoryData;
+}) {
   const [activeTab, setActiveTab] = useState("graph");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.inventory;
@@ -99,7 +126,10 @@ export default function InventoryScreen({ inventory }: { inventory?: InventoryDa
   const calculateUsed = (inventoryId: string) => {
     return (
       inventory?.transactions
-        ?.filter((trx) => trx.InventoryID === inventoryId && trx.TransactionType === "USED")
+        ?.filter(
+          (trx) =>
+            trx.InventoryID === inventoryId && trx.TransactionType === "USED"
+        )
         .reduce((sum, trx) => sum + (trx.Quantity || 0), 0) || 0
     );
   };
@@ -110,6 +140,7 @@ export default function InventoryScreen({ inventory }: { inventory?: InventoryDa
         type: item.Category,
         used: calculateUsed(item.InventoryID),
         total: item.TotalQuantity,
+        id: item.InventoryID,
       }))
     : [
         { name: t.resource.name, type: t.resource.type, used: 10, total: 100 },
@@ -156,7 +187,11 @@ export default function InventoryScreen({ inventory }: { inventory?: InventoryDa
       ) : (
         <ScrollView style={styles.listContainer}>
           {resources.map((resource, index) => (
-            <View key={index} style={styles.resourceItem}>
+            <View
+              key={index}
+              style={styles.resourceItem}
+              onTouchEnd={() => router.push(`/log/inventory/${resource.id}`)}
+            >
               <View>
                 <Text style={styles.resourceName}>{resource.name}</Text>
                 <Text style={styles.resourceType}>({resource.type})</Text>

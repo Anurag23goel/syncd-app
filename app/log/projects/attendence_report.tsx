@@ -13,6 +13,7 @@ import { Ionicons, AntDesign, Feather } from "@expo/vector-icons";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { router } from "expo-router";
 
 interface AttendeeType {
   id: string;

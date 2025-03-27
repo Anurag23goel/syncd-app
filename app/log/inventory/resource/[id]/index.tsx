@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, router } from "expo-router";
-import { getAllInventoryItems } from "@/services/project_user/inventory"; // Adjust path as needed
+import { getAllResouceItems } from "@/services/project_user/inventory"; // Adjust path as needed
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { useAuthStore } from "@/store/authStore";
 import { translations } from "@/constants/translations";
@@ -76,6 +76,10 @@ const ResourceCard: React.FC<SINGLE_INVENTORY_ITEM> = ({
 };
 
 const ResourceScreen: React.FC = () => {
+
+  console.log(" RESOURCE KE ANDAR [id] KE ANDAR");
+
+
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].inventory;
   const { id } = useLocalSearchParams();
@@ -89,7 +93,7 @@ const ResourceScreen: React.FC = () => {
     const fetchResources = async () => {
       if (!authToken || !projectID) return;
       try {
-        const response = await getAllInventoryItems(projectID, authToken);
+        const response = await getAllResouceItems(projectID, authToken);
         setResources(response.data?.inventory || []);
         
       } catch (error) {

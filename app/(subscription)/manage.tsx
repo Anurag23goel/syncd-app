@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { router } from "expo-router";
 
 // Memoize modal components to prevent unnecessary re-renders
 interface SelectMethodModalProps {
@@ -398,7 +399,7 @@ export default function App() {
       <ScrollView>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
+          <TouchableOpacity style={styles.backButton}  onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.backText}>{t.back}</Text>

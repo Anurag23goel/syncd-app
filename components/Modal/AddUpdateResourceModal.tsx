@@ -36,7 +36,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
   saveText = "Save",
 }) => {
   const language = useLanguageStore((state) => state.language);
-  console.log("Current language:", language); // Debug language value
+  // console.log("Current language:", language); // Debug language value
   const t =
     translations[language]?.inventory?.modal?.addUpdateResource ||
     translations["en"].inventory.modal.addUpdateResource;

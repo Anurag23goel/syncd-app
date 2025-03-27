@@ -4,10 +4,15 @@ import {
   AddInventoryPayload,
   UpdateInventoryPayload,
   DeleteInventoryPayload,
+  InventoryListResponse,
 } from "@/types/Apitypes";
 import axiosInstance from "../../index";
 import { API_ROUTES } from "../../routes.config";
-import { GET_ALL_INVENTORY_ITEMS_RESPONSE } from "@/types/NewApiTypes";
+import {
+  GET_ALL_INVENTORY_ITEMS_RESPONSE,
+  INVENTORY_HISTORY,
+  SINGLE_INVENTORY_ITEM,
+} from "@/types/NewApiTypes";
 
 /**
  * Add a new inventory item
@@ -16,12 +21,13 @@ import { GET_ALL_INVENTORY_ITEMS_RESPONSE } from "@/types/NewApiTypes";
  */
 export async function addInventoryItem(
   inventoryData: AddInventoryPayload
-): Promise<ApiSuccessResponse<InventoryResponse>> {
+): Promise<ApiSuccessResponse> {
   try {
-    const { data } = await axiosInstance.post<ApiResponse<InventoryResponse>>(
-      API_ROUTES.PROJECT_MAIN_USER.INVENTORY.ADD_INVENTORY_ITEM,
-      inventoryData
-    );
+    const { data } = await axiosInstance.post<
+      ApiResponse<SINGLE_INVENTORY_ITEM>
+    >(API_ROUTES.PROJECT_MAIN_USER.INVENTORY.ADD_INVENTORY_ITEM, inventoryData);
+
+    console.log(data);
 
     return {
       message: data.message,
@@ -37,7 +43,7 @@ export async function addInventoryItem(
  * @param projectId - Project ID
  * @returns List of inventory items
  */
-export async function getAllInventoryItems(
+export async function getAllResouceItems(
   projectId: string,
   authToken: string
 ): Promise<ApiSuccessResponse> {
@@ -58,7 +64,6 @@ export async function getAllInventoryItems(
       message: data.message,
       data: data as any,
     };
-    
   } catch (error) {
     throw error;
   }
@@ -71,9 +76,9 @@ export async function getAllInventoryItems(
  */
 export async function updateInventoryItem(
   updateData: UpdateInventoryPayload
-): Promise<ApiSuccessResponse<InventoryResponse>> {
+): Promise<ApiSuccessResponse> {
   try {
-    const { data } = await axiosInstance.post<ApiResponse<InventoryResponse>>(
+    const { data } = await axiosInstance.post<ApiResponse>(
       API_ROUTES.PROJECT_MAIN_USER.INVENTORY.UPDATE_INVENTORY_ITEM,
       updateData
     );
@@ -113,11 +118,11 @@ export async function deleteInventoryItem(
 export async function GET_INVENTORY_HISTORY_FOR_USER(
   inventoryID: string,
   authToken: string
-): Promise<ApiSuccessResponse<{ message: string }>> {
+): Promise<ApiSuccessResponse> {
   try {
-    const { data } = await axiosInstance.get<ApiResponse<{ message: string }>>(
+    const { data } = await axiosInstance.get<ApiResponse<INVENTORY_HISTORY>>(
       API_ROUTES.PROJECT_MAIN_USER.INVENTORY.GET_INVENTORY_HISTORY_FOR_USER.replace(
-        "{{projectID}}",
+        "{{inventoryID}}",
         inventoryID
       ),
       {
@@ -127,9 +132,11 @@ export async function GET_INVENTORY_HISTORY_FOR_USER(
       }
     );
 
+    console.log(data);
+    
+
     return {
-      message: data.message,
-      data: data.data as any,
+      data: data as any,
     };
   } catch (error) {
     throw error;

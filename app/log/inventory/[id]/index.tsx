@@ -6,7 +6,7 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CustomGaugeChart from "@/components/Chart/GaugeChart";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,20 +18,46 @@ import PopUpModal from "@/components/Modal/PopUpModal";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
+import { GET_INVENTORY_HISTORY_FOR_USER } from "@/services/project_user/inventory";
+import { INVENTORY_HISTORY } from "@/types/NewApiTypes";
 
 const Id = () => {
+  console.log(" INVENTORY KE ANDAR [id] KE ANDAR");
+
   const [modalVisible, setModalVisible] = React.useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [resourceModalVisible, setResourceModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [resourceTitle, setResourceTitle] = useState("");
   const inventoryID = useLocalSearchParams();
-  const actualInventoryID = Array.isArray(inventoryID) ? inventoryID[0] : inventoryID;
+  const { id } = useLocalSearchParams();
+  const actualInventoryID = typeof id === "string" ? id : "";
+  console.log("YE HAI INVENTORY ID - ", actualInventoryID);
+
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].inventory;
   const authToken = useAuthStore.getState().token;
+  const [inventoryDetails, setInventoryDetails] = useState<INVENTORY_HISTORY | null>(null);
+  const details = inventoryDetails?.history.inventoryDetails;
+  const transactions = inventoryDetails?.history.transactions || [];
 
-  console.log(actualInventoryID, authToken);
+  const fetchInventoryDetails = async () => {
+    if (!authToken) {
+      return;
+    }
+
+    const response = await GET_INVENTORY_HISTORY_FOR_USER(
+      actualInventoryID,
+      authToken
+    );
+    console.log(response.data);
+
+    setInventoryDetails(response.data);
+  };
+
+  useEffect(() => {
+    fetchInventoryDetails();
+  }, []);
 
   const handleActionPress = (action: string) => {
     if (
@@ -49,6 +75,7 @@ const Id = () => {
     }
     setActionModalVisible(false);
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -67,17 +94,22 @@ const Id = () => {
           <TextInput placeholder={t.search} style={styles.searchInput} />
         </View>
 
-        <CustomGaugeChart total={12} used={2} left={2} damaged={3} />
+        <CustomGaugeChart
+          total={inventoryDetails?.history.summary.totalAdded || 0}
+          used={inventoryDetails?.history.summary.totalUsed || 0}
+          left={100} //total Left
+          damaged={inventoryDetails?.history.summary.totalDamaged || 0}
+        />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.resourceDetails.cost}</Text>
+          <Text style={styles.sectionTitle}>₹ {details?.Cost ?? "N/A"}</Text>
           <Text style={styles.sectionTitle1}>
-            {t.resourceDetails.purchaseDate}
+            {details ? new Date(details.createdAt).toLocaleString() : ""}
           </Text>
         </View>
         <FileItem
-          name={t.resourceDetails.invoice}
-          date={t.resourceDetails.date}
+          name={details?.InvoiceLink ?? ""}
+          date={details?.createdAt ?? ""}
           size={t.resourceDetails.fileSize}
           iconType="file"
           sharedWith="all"
@@ -87,39 +119,22 @@ const Id = () => {
           {t.resourceDetails.usageHistory}
         </Text>
         <View style={[styles.section, { flexDirection: "column", gap: 20 }]}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.sectionTitle}>
-              {t.resourceDetails.quantity}
-            </Text>
-            <Text style={styles.sectionTitle1}>{t.resourceDetails.usedOn}</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.sectionTitle}>
-              {t.resourceDetails.quantity}
-            </Text>
-            <Text style={styles.sectionTitle1}>{t.resourceDetails.usedOn}</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.sectionTitle}>
-              {t.resourceDetails.quantity}
-            </Text>
-            <Text style={styles.sectionTitle1}>{t.resourceDetails.usedOn}</Text>
-          </View>
+          {transactions
+            .filter((trx) => trx.TransactionType === "USED")
+            .map((trx) => (
+              <View
+                key={trx.TransactionID}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={styles.sectionTitle}>{trx.Quantity}</Text>
+                <Text style={styles.sectionTitle1}>
+                  {new Date(trx.TransactionDate).toLocaleDateString()}
+                </Text>
+              </View>
+            ))}
         </View>
       </ScrollView>
       <TouchableOpacity

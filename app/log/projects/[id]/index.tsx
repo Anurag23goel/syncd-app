@@ -62,7 +62,8 @@ export default function ProjectDetails() {
   const authToken = useAuthStore.getState().token;
   console.log("Auth TOKEN:", authToken);
 
-  const [projectDetails, setProjectDetails] = useState<NEW_PROJECT_DETAILS | null>(null);
+  const [projectDetails, setProjectDetails] =
+    useState<NEW_PROJECT_DETAILS | null>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [checklistVisible, setChecklistVisible] = useState(false);
@@ -478,7 +479,7 @@ export default function ProjectDetails() {
             {t.sections.budget}
           </Text>
         </Pressable>
-        <BudgetScreen budgetDetails = {projectDetails?.budget || {}}/>
+        <BudgetScreen budgetDetails={projectDetails?.budget || {}} />
 
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.checklist}
@@ -488,14 +489,14 @@ export default function ProjectDetails() {
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.inventory}
         </Text>
-        <InventoryScreen inventory = {projectDetails?.inventory}/>
+        <InventoryScreen inventory={projectDetails?.inventory} />
 
         <Pressable onPress={() => router.push("/log/projects/milestone")}>
           <Text style={[styles.title, { marginTop: 10 }]}>
             {t.sections.milestone}
           </Text>
         </Pressable>
-        <ProjectOverview milestoneData = {projectDetails?.milestones}/>
+        <ProjectOverview milestoneData={projectDetails?.milestones} />
 
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.renderComparison}
@@ -866,8 +867,8 @@ const styles = StyleSheet.create({
   },
   centerLabel: {
     position: "absolute",
-    top: moderateScale(-10),
-    left: moderateScale(-25),
+    top: moderateScale(-15),
+    left: moderateScale(-35),
     fontSize: moderateScale(14),
   },
   percentageText: {

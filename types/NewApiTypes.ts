@@ -5,10 +5,10 @@ export interface SINGLE_INVENTORY_ITEM {
   ResourceName: string;
   BrandName: string;
   TotalQuantity: number;
-  Cost: string;
+  Cost: string | null | undefined;
   Category: string;
   PaymentMode: "Cash" | "Card" | "Online" | string;
-  InvoiceLink: string | null;
+  InvoiceLink: string | null | undefined;
   PhotoLink: string | null;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -160,4 +160,41 @@ export interface CHAT_MESSAGES {
   SenderID: string;
   Content: string;
   MessageType: "TEXT" | "IMAGE" | "VIDEO" | "FILE"; // Extend as needed
+}
+
+// ----------- INVENTORY ---------------
+
+export interface INVENTORY_HISTORY {
+  history: {
+    inventoryDetails: SINGLE_INVENTORY_ITEM;
+    transactions: INVENTORY_TRANSACTION[];
+    summary: INVENTORY_SUMMARY;
+  };
+}
+
+export interface INVENTORY_HISTORY_WITHOUT_HISTORY_NESTING {
+  history: {
+    inventoryDetails: SINGLE_INVENTORY_ITEM;
+    transactions: INVENTORY_TRANSACTION[];
+    summary: INVENTORY_SUMMARY;
+  };
+}
+
+export interface INVENTORY_TRANSACTION {
+  TransactionID: string;
+  InventoryID: string;
+  Quantity: number;
+  TransactionType: "ADDED" | "USED" | "DAMAGED"; // Add more types if needed
+  PhotoLink: string | null;
+  TransactionDate: string;
+  Note: string | null;
+  UsedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface INVENTORY_SUMMARY {
+  totalAdded: number;
+  totalUsed: number;
+  totalDamaged: number;
 }
