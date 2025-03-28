@@ -9,7 +9,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
@@ -17,6 +17,7 @@ import { translations } from "@/constants/translations";
 import { useAuthStore } from "@/store/authStore";
 import { getAllUserProjects } from "@/services/project_other_user";
 import { ProjectDetailsResponse, SingleProjectDetails } from "@/types/Apitypes";
+import { moderateScale } from "@/utils/spacing";
 
 interface InventoryCardProps {
   title: string;
@@ -45,7 +46,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   </Pressable>
 );
 
-const FileSpaceScreen: React.FC = () => {
+const Inventory_Projects_Screen: React.FC = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].inventory;
 
@@ -84,9 +85,12 @@ const FileSpaceScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <AntDesign name="arrowleft" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.title}</Text>
         <TouchableOpacity onPress={() => router.push("/notification")}>
-          <Ionicons name="notifications-outline" size={24} color="black" />
+          <Ionicons name="notifications-outline" size={24} color="#1A1A1A" />
         </TouchableOpacity>
       </View>
 
@@ -121,33 +125,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
-    paddingTop: 20,
     paddingHorizontal: 16,
+    paddingTop: 10,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
+    justifyContent: "space-between", // Keeps back button, title, and notification balanced
+    marginBottom: moderateScale(16), // Updated to moderateScale for consistency
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: moderateScale(26), // Updated to moderateScale
     fontFamily: "SFPro-Bold",
+    color: "#1A1A1A",
+    flex: 1, // Allows title to take available space
+    textAlign: "center", // Centers the title
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
     fontFamily: "SFPro-Regular",
+    color: "#333",
   },
   scrollContainer: {
     paddingBottom: 20,
@@ -155,32 +168,39 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 14, // Slightly larger for bigger card
     alignItems: "center",
-    padding: 12,
-    marginBottom: 16,
+    padding: 16, // Increased padding for larger card
+    marginBottom: 14, // Slightly increased spacing between cards
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    minHeight: 100, // Added minimum height to ensure larger size
   },
   cardContent: {
     flex: 1,
+    justifyContent: "center",
   },
   projectImage: {
-    width: 100,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: moderateScale(130), // Slightly larger for impact
+    height: moderateScale(90),
+    borderRadius: 10, // Slightly larger for bigger image
+    marginRight: 16, // Increased spacing from text
+    backgroundColor: "#F0F0F0",
   },
   projectTitle: {
-    fontSize: 28,
-    marginBottom: 4,
-    fontFamily: "SFPro-Bold",
+    fontSize: 20, // Increased for larger card
+    fontFamily: "SFPro-Semibold",
     color: "#1A1A1A",
+    marginBottom: 4, // Slightly increased spacing
   },
   projectLocation: {
-    fontSize: 12,
+    fontSize: 16, // Increased for larger card
     color: "#6B6B6B",
-    fontFamily: "SFPro-Medium",
-    marginBottom: 8,
+    fontFamily: "SFPro-Regular",
   },
 });
 
-export default FileSpaceScreen;
+export default Inventory_Projects_Screen;

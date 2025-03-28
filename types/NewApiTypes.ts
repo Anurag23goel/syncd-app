@@ -182,19 +182,17 @@ export interface CHAT_MESSAGES {
 // ----------- INVENTORY ---------------
 
 export interface INVENTORY_HISTORY {
-  history: {
-    inventoryDetails: SINGLE_INVENTORY_ITEM;
-    transactions: INVENTORY_TRANSACTION[];
-    summary: INVENTORY_SUMMARY;
-  };
+  inventoryDetails: SINGLE_INVENTORY_ITEM;
+  transactions: INVENTORY_TRANSACTION[];
+  Added: number;
+  Used: number;
+  Damaged: number;
+  Left: number;
 }
 
 export interface INVENTORY_HISTORY_WITHOUT_HISTORY_NESTING {
-  history: {
-    inventoryDetails: SINGLE_INVENTORY_ITEM;
-    transactions: INVENTORY_TRANSACTION[];
-    summary: INVENTORY_SUMMARY;
-  };
+  inventoryDetails: SINGLE_INVENTORY_ITEM;
+  transactions: INVENTORY_TRANSACTION[];
 }
 
 export interface INVENTORY_TRANSACTION {

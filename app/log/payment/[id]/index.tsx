@@ -45,7 +45,6 @@ const Id = () => {
         // TODO: Replace with actual API call when available
         console.log("Fetching project details for ID:", projectID, authToken);
         const response = await getProjectDetails(projectID, authToken);
-        console.log(response.data);
         // setProjectDetails(response.data);
 
 

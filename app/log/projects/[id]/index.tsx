@@ -316,11 +316,15 @@ export default function ProjectDetails() {
       </View>
 
       <View style={styles.imageContainer}>
-        <Image
-          source={require("../../../../assets/images/assets/image1.png")}
-          style={styles.mainImage}
-          resizeMode="cover"
-        />
+      <Image
+  source={
+    projectDetails?.project?.ProjectThumbnail
+      ? { uri: projectDetails.project.ProjectThumbnail }
+      : require("../../../../assets/images/recent.png")
+  }
+  style={styles.mainImage}
+  resizeMode="cover"
+/>
       </View>
 
       <View style={styles.content}>
@@ -479,7 +483,7 @@ export default function ProjectDetails() {
             {t.sections.budget}
           </Text>
         </Pressable>
-        <BudgetScreen budgetDetails={projectDetails?.budget || {}} />
+        <BudgetScreen budgetDetails={projectDetails?.project.Budget || 0} />
 
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.checklist}
@@ -506,7 +510,10 @@ export default function ProjectDetails() {
         <Text style={[styles.title, { marginTop: 10 }]}>
           {t.sections.tasks}
         </Text>
-        <TaskManager />
+        <TaskManager
+          tasksStats={projectDetails?.tasks.stats}
+          taskRecords={projectDetails?.tasks.records}
+        />
 
         <View>
           <TouchableOpacity
@@ -884,7 +891,7 @@ const styles = StyleSheet.create({
     left: moderateScale(-35),
     fontSize: moderateScale(14),
   },
- 
+
   legendContainer: {
     flexDirection: "row",
     justifyContent: "center",

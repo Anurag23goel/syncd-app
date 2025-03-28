@@ -119,6 +119,7 @@ export default function InventoryScreen({
   inventory?: InventoryData;
 }) {
   const [activeTab, setActiveTab] = useState("graph");
+  const [showAll, setShowAll] = useState(false); // State to toggle full list
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.inventory;
 
@@ -143,11 +144,37 @@ export default function InventoryScreen({
         id: item.InventoryID,
       }))
     : [
-        { name: t.resource.name, type: t.resource.type, used: 10, total: 100 },
-        { name: t.resource.name, type: t.resource.type, used: 20, total: 100 },
-        { name: t.resource.name, type: t.resource.type, used: 30, total: 100 },
-        { name: t.resource.name, type: t.resource.type, used: 40, total: 100 },
+        {
+          name: t.resource.name,
+          type: t.resource.type,
+          used: 10,
+          total: 100,
+          id: "1",
+        },
+        {
+          name: t.resource.name,
+          type: t.resource.type,
+          used: 20,
+          total: 100,
+          id: "2",
+        },
+        {
+          name: t.resource.name,
+          type: t.resource.type,
+          used: 30,
+          total: 100,
+          id: "3",
+        },
+        {
+          name: t.resource.name,
+          type: t.resource.type,
+          used: 40,
+          total: 100,
+          id: "4",
+        },
       ];
+
+  const displayedResources = showAll ? resources : resources.slice(0, 2); // Show 2 initially or full list
 
   return (
     <View style={styles.container}>
@@ -186,7 +213,7 @@ export default function InventoryScreen({
         <GaugeChart inventory={inventory} />
       ) : (
         <ScrollView style={styles.listContainer}>
-          {resources.map((resource, index) => (
+          {displayedResources.map((resource, index) => (
             <View
               key={index}
               style={styles.resourceItem}
@@ -201,6 +228,16 @@ export default function InventoryScreen({
               </Text>
             </View>
           ))}
+          {resources.length > 2 && (
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowAll(!showAll)}
+            >
+              <Text style={styles.toggleButtonText}>
+                {showAll ? "Show Less" : "Show More"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       )}
     </View>
@@ -310,6 +347,17 @@ const styles = StyleSheet.create({
   resourceQuantity: {
     fontSize: moderateScale(15),
     color: "#666",
+    fontFamily: "SFPro-Regular",
+  },
+  toggleButton: {
+    alignItems: "center",
+    paddingVertical: moderateScale(12),
+    borderRadius: moderateScale(8),
+  },
+  toggleButtonText: {
+    fontSize: moderateScale(16),
+    color: "#007AFF",
+    textDecorationLine: "underline",
     fontFamily: "SFPro-Regular",
   },
 });

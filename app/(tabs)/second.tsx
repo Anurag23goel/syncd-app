@@ -9,7 +9,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons"; // Added AntDesign for back button
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
@@ -18,11 +18,12 @@ import { getAllUserProjects } from "@/services/project_other_user";
 import { ProjectDetailsResponse } from "@/types/Apitypes";
 import { useAuthStore } from "@/store/authStore";
 import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
+import { moderateScale } from "@/utils/spacing";
 
 interface ProjectCardProps {
   title: string;
   location: string | null;
-  imgSrc:string
+  imgSrc: string;
   handleClick: () => void;
 }
 
@@ -34,9 +35,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => (
   <Pressable style={styles.card} onPress={handleClick}>
     <Image
-      source={imgSrc
-        ? { uri: imgSrc }
-        : require("../../assets/images/recent.png")}
+      source={
+        imgSrc ? { uri: imgSrc } : require("../../assets/images/recent.png")
+      }
       style={styles.projectImage}
     />
     <View style={styles.cardContent}>
@@ -56,7 +57,6 @@ const FileSpaceScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all projects from the API
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -69,12 +69,11 @@ const FileSpaceScreen: React.FC = () => {
 
         const response = await getAllUserProjects(authToken);
 
-        // Check if response contains the "projects" key and set state
         if (response.data?.projects) {
-          setAllProjects(response.data.projects); // ✅ Update state with projects array
+          setAllProjects(response.data.projects);
         } else {
           console.warn("No projects found in response.");
-          setAllProjects([]); // Set empty array if no projects found
+          setAllProjects([]);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -86,29 +85,34 @@ const FileSpaceScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <AntDesign name="arrowleft" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.fileSpace}</Text>
         <TouchableOpacity onPress={() => router.push("/notification")}>
-          <Ionicons name="notifications-outline" size={24} color="black" />
+          <Ionicons name="notifications-outline" size={24} color="#1A1A1A" />
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="gray" />
+        <Ionicons name="search-outline" size={20} color="#6B7280" />
         <TextInput placeholder={t.search} style={styles.searchInput} />
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {allProjects?.map((project) => (
           <ProjectCard
             key={project.ProjectID}
             title={project.ProjectName}
             imgSrc={project.ProjectThumbnail || ""}
-            location={project.ProjectLocation}
+            location={project.ProjectLocation || "Unknown Location"}
             handleClick={() => router.push(`/file/${project.ProjectID}`)}
           />
         ))}
@@ -120,66 +124,82 @@ const FileSpaceScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-    paddingTop: 20,
-    paddingHorizontal: 16,
+    backgroundColor: "#F5F5F5", // Matches inventory log
+    paddingHorizontal: moderateScale(16), // Updated to moderateScale
+    paddingTop: moderateScale(10), // Updated to moderateScale
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
+    justifyContent: "space-between", // Centers title with back and notification icons
+    marginBottom: moderateScale(16), // Updated to moderateScale
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: moderateScale(26), // Matches inventory log
     fontFamily: "SFPro-Bold",
+    color: "#1A1A1A", // Matches inventory log
+    flex: 1, // Allows title to take available space
+    textAlign: "center", // Centers the title
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    marginBottom: 20,
+    paddingHorizontal: moderateScale(12), // Matches inventory log
+    paddingVertical: moderateScale(10), // Matches inventory log
+    borderRadius: moderateScale(12), // Matches inventory log
+    marginBottom: moderateScale(20), // Matches inventory log
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 }, // Matches inventory log
+    shadowOpacity: 0.1, // Matches inventory log
+    shadowRadius: 3, // Matches inventory log
+    elevation: 2, // Matches inventory log
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: moderateScale(8), // Matches inventory log
+    fontSize: moderateScale(16), // Matches inventory log
     fontFamily: "SFPro-Regular",
+    color: "#333", // Matches inventory log
   },
   scrollContainer: {
-    paddingBottom: 20,
+    paddingBottom: moderateScale(20), // Matches inventory log
   },
   card: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: moderateScale(14), // Matches inventory log
     alignItems: "center",
-    padding: 12,
-    marginBottom: 16,
+    padding: moderateScale(16), // Matches inventory log
+    marginBottom: moderateScale(14), // Matches inventory log
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 }, // Matches inventory log
+    shadowOpacity: 0.1, // Matches inventory log
+    shadowRadius: 4, // Matches inventory log
+    elevation: 3, // Matches inventory log
+    minHeight: moderateScale(100), // Matches inventory log
   },
   cardContent: {
     flex: 1,
+    justifyContent: "center", // Matches inventory log
   },
   projectImage: {
-    width: 100,
-    height: 130,
-    borderRadius: 8,
-    marginRight: 12,
+    width: moderateScale(130), // Matches inventory log
+    height: moderateScale(90), // Matches inventory log
+    borderRadius: moderateScale(10), // Matches inventory log
+    marginRight: moderateScale(16), // Matches inventory log
+    backgroundColor: "#F0F0F0", // Matches inventory log
   },
   projectTitle: {
-    fontSize: 28,
-    marginBottom: 4,
-    fontFamily: "SFPro-Bold",
-    color: "#1A1A1A",
+    fontSize: moderateScale(20), // Matches inventory log
+    fontFamily: "SFPro-Semibold",
+    color: "#1A1A1A", // Matches inventory log
+    marginBottom: moderateScale(4), // Matches inventory log
   },
   projectLocation: {
-    fontSize: 12,
-    color: "#6B6B6B",
-    fontFamily: "SFPro-Medium",
-    marginBottom: 8,
+    fontSize: moderateScale(16), // Matches inventory log
+    color: "#6B6B6B", // Matches inventory log
+    fontFamily: "SFPro-Regular",
   },
 });
 

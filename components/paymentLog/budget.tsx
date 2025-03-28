@@ -6,7 +6,11 @@ import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 
-const BudgetScreen = ({budgetDetails}) => {
+interface BudgetScreenProps {
+  budgetDetails: number; // Define the prop type as a number
+}
+
+const BudgetScreen: React.FC<BudgetScreenProps> = ({budgetDetails}) => {
   
   const [activeTab, setActiveTab] = useState("graph");
   const language = useLanguageStore((state) => state.language);
@@ -45,17 +49,18 @@ const BudgetScreen = ({budgetDetails}) => {
       </View>
 
       {/* Conditional Rendering */}
-      {activeTab === "budget" && (
+      {activeTab === "budget" && 
+      (
         <View style={styles.card}>
           <Text style={styles.cardLabel}>{t.totalBudget}</Text>
-          <Text style={styles.totalAmount}>₹15,00,000</Text>
+          <Text style={styles.totalAmount}>₹{budgetDetails}</Text>
 
           <View style={styles.budgetRow}>
             <View style={styles.rowLeft}>
               <Ionicons name="shield-outline" size={20} color="#000" />
               <Text style={styles.rowLabel}>{t.budget}</Text>
             </View>
-            <Text style={styles.amount}>₹20,00,000</Text>
+            <Text style={styles.amount}>₹{budgetDetails}</Text>
           </View>
 
           <View style={styles.budgetRow}>

@@ -12,11 +12,9 @@ import {
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { AddIcon } from "@/components/navigation/Icons";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
-import { ProjectDetailsResponse, ProjectResponse } from "@/types/Apitypes";
 import { getAllUserProjects } from "@/services/project_other_user";
 import { useAuthStore } from "@/store/authStore";
 import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
@@ -26,7 +24,7 @@ interface InventoryCardProps {
   location: string | null;
   handleClick: () => void;
   imgSrc?: string;
-  IsCompleted?: boolean; // New prop to check if it's in the Completed tab
+  IsCompleted?: boolean;
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({
@@ -54,78 +52,23 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 
     {/* Badge */}
     {IsCompleted ? (
-      <View
-        style={{
-          backgroundColor: "#3498DB",
-          borderRadius: 20,
-          position: "absolute",
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          top: 8,
-          right: 8,
-        }}
-      >
-        <Text
-          style={{
-            color: "#fff",
-            fontSize: 8,
-            fontFamily: "SFPro-Regular",
-          }}
-        >
-          Completed
-        </Text>
+      <View style={styles.badgeCompleted}>
+        <Text style={styles.badgeText}>Completed</Text>
       </View>
     ) : (
-      <View
-        style={{
-          backgroundColor: "#27AE60",
-          borderRadius: 20,
-          position: "absolute",
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          top: 8,
-          right: 8,
-        }}
-      >
-        <Text
-          style={{
-            color: "#fff",
-            fontSize: 8,
-            fontFamily: "SFPro-Regular",
-          }}
-        >
-          Active
-        </Text>
+      <View style={styles.badgeActive}>
+        <Text style={styles.badgeText}>Active</Text>
       </View>
     )}
 
     {/* Feedback Section */}
     {IsCompleted && (
       <TouchableOpacity
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "#F2F2F2",
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-          borderRadius: 6,
-          borderWidth: 1,
-          borderColor: "#E0E0E0",
-          marginTop: 6,
-          width: "100%",
-        }}
+        style={styles.feedbackButton}
         onPress={() => router.push("/log/projects/feedback")}
       >
-        <AntDesign name="like2" size={20} color="#B5B5B5" />
-        <Text
-          style={{
-            color: "#333333",
-            fontFamily: "SFPro-Regular",
-            marginLeft: 10,
-          }}
-        >
-          Feedback from Review
-        </Text>
+        <AntDesign name="like2" size={20} color="#6B7280" />
+        <Text style={styles.feedbackText}>Feedback from Review</Text>
       </TouchableOpacity>
     )}
   </Pressable>
@@ -150,12 +93,11 @@ const ProjectScreen: React.FC = () => {
 
         const response = await getAllUserProjects(authToken);
 
-        // Check if response contains the "projects" key and set state
         if (response.data?.projects) {
-          setProjectsData(response.data?.projects); // Update state with projects array
+          setProjectsData(response.data?.projects);
         } else {
           console.warn("No projects found in response.");
-          setProjectsData([]); // Set empty array if no projects found
+          setProjectsData([]);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -175,15 +117,18 @@ const ProjectScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <AntDesign name="arrowleft" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.title}</Text>
         <TouchableOpacity onPress={() => router.push("/notification")}>
-          <Ionicons name="notifications-outline" size={24} color="black" />
+          <Ionicons name="notifications-outline" size={24} color="#1A1A1A" />
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="gray" />
+        <Ionicons name="search-outline" size={20} color="#6B7280" />
         <TextInput placeholder={t.search} style={styles.searchInput} />
       </View>
 
@@ -209,7 +154,7 @@ const ProjectScreen: React.FC = () => {
 
       {/* Projects List */}
       <Text style={styles.headerTitle}>{t.projectsList}</Text>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {filteredProjects.map((project) => (
           <InventoryCard
             key={project.ProjectID}
@@ -226,14 +171,7 @@ const ProjectScreen: React.FC = () => {
 
       {/* Add Project Button */}
       <TouchableOpacity
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          backgroundColor: "#002347",
-          borderRadius: 50,
-          padding: 14,
-        }}
+        style={styles.addButton}
         onPress={() => router.push("/log/projects/form")}
       >
         <Feather name="plus" size={24} color="#fff" />
@@ -245,100 +183,168 @@ const ProjectScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-    paddingTop: moderateScale(20),
+    backgroundColor: "#F5F5F5", // Matches inventory log
     paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(10),
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: moderateScale(20),
+    justifyContent: "space-between", // Centers title with back and notification
+    marginBottom: moderateScale(16),
   },
   headerTitle: {
-    fontSize: moderateScale(24),
+    fontSize: moderateScale(26), // Matches inventory log
     fontFamily: "SFPro-Bold",
-    marginTop: moderateScale(10),
-    marginBottom: moderateScale(10),
+    color: "#1A1A1A",
+    flex: 1, // Allows title to take available space
+    textAlign: "center", // Centers the title
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(8),
-    borderRadius: moderateScale(10),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
     marginBottom: moderateScale(20),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
     marginLeft: moderateScale(8),
     fontSize: moderateScale(16),
     fontFamily: "SFPro-Regular",
+    color: "#333",
   },
   tabsContainer: {
     flexDirection: "row",
-    marginVertical: moderateScale(8),
+    marginBottom: moderateScale(16),
+    backgroundColor: "#FFFFFF",
+    padding: moderateScale(6),
+    borderRadius: moderateScale(10),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    alignItems: "center",
+    justifyContent: "space-around",
   },
   tab: {
     paddingVertical: moderateScale(8),
-    paddingHorizontal: moderateScale(24),
-    borderRadius: moderateScale(6),
-    alignItems: "center",
-    marginRight: moderateScale(8),
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    paddingHorizontal: moderateScale(18),
+    borderRadius: moderateScale(8),
+    backgroundColor: "transparent",
   },
   activeTab: {
     backgroundColor: "#007BFF",
+    shadowColor: "#007BFF",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabText: {
     color: "#666",
-    fontSize: moderateScale(12),
-    fontFamily: "SFPro-Regular",
+    fontSize: moderateScale(14),
+    fontFamily: "SFPro-Medium",
   },
   activeTabText: {
     color: "#fff",
-  },
-  scrollContainer: {
-    paddingBottom: moderateScale(20),
+    fontFamily: "SFPro-Semibold",
   },
   card: {
-    flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    borderRadius: moderateScale(12),
-    alignItems: "center",
-    padding: moderateScale(12),
-    marginBottom: moderateScale(16),
+    borderRadius: moderateScale(14),
+    padding: moderateScale(16),
+    marginBottom: moderateScale(14),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    minHeight: moderateScale(100), // Matches inventory log
   },
   cardContent: {
     flex: 1,
-    marginTop: moderateScale(10),
+    marginLeft: moderateScale(12),
+    justifyContent: "center", // Matches inventory log
   },
   projectImage: {
-    width: moderateScale(100),
-    height: moderateScale(70),
-    borderRadius: moderateScale(8),
-    marginRight: moderateScale(12),
+    width: moderateScale(130),
+    height: moderateScale(90),
+    borderRadius: moderateScale(10),
+    backgroundColor: "#F0F0F0",
   },
   projectTitle: {
-    fontSize: moderateScale(28),
-    marginBottom: moderateScale(4),
-    fontFamily: "SFPro-Bold",
+    fontSize: moderateScale(20), // Matches inventory log
+    fontFamily: "SFPro-Semibold",
     color: "#1A1A1A",
+    marginBottom: moderateScale(4),
   },
   projectLocation: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(16), // Matches inventory log
     color: "#6B6B6B",
-    fontFamily: "SFPro-Medium",
-    marginBottom: moderateScale(8),
+    fontFamily: "SFPro-Regular",
+  },
+  badgeCompleted: {
+    backgroundColor: "#3498DB",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    position: "absolute",
+    top: 8,
+    right: 8,
+  },
+  badgeActive: {
+    backgroundColor: "#27AE60",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    position: "absolute",
+    top: 8,
+    right: 8,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: moderateScale(10),
+    fontFamily: "SFPro-Regular",
+  },
+  feedbackButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F2F2F2",
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(6),
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    marginTop: moderateScale(8),
+    width: "100%",
   },
   feedbackText: {
-    marginTop: moderateScale(20),
-    fontSize: moderateScale(16),
-    fontFamily: "SFPro-Regular",
     color: "#333333",
-    textAlign: "center",
+    fontFamily: "SFPro-Regular",
+    fontSize: moderateScale(14),
+    marginLeft: moderateScale(8),
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#002347",
+    borderRadius: 50,
+    padding: moderateScale(14),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
 });
 

@@ -17,11 +17,12 @@ import { translations } from "@/constants/translations";
 import { ProjectDetailsResponse } from "@/types/Apitypes";
 import { useAuthStore } from "@/store/authStore";
 import { getAllUserProjects } from "@/services/project_other_user";
+import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
 
 interface InventoryCardProps {
   title: string;
-  location: string;
-  imgSrc: string | null;
+  location: string | null;
+  imgSrc: string | null
   handleClick: () => void;
 }
 
@@ -48,7 +49,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 const PaymentLogScreen: React.FC = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog;
-  const [projects, setProjects] = useState<ProjectDetailsResponse[]>([]);
+  const [projects, setProjects] = useState<SINGLE_PROJECT_DETAILS[]>([]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -64,6 +65,8 @@ const PaymentLogScreen: React.FC = () => {
 
         // Check if response contains the "projects" key and set state
         if (response.data.projects) {
+          
+          
           setProjects(response.data.projects); // ✅ Update state with projects array
         } else {
           console.warn("No projects found in response.");
