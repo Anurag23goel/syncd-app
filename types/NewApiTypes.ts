@@ -213,3 +213,14 @@ export interface INVENTORY_SUMMARY {
   totalUsed: number;
   totalDamaged: number;
 }
+
+
+// --------------- FILE SPACE TYPES ---------------
+
+export interface SINGLE_FOLDER{
+  
+}
+
+export interface GET_FOLDERS_FOR_PROJECT{
+  
+}

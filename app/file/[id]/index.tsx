@@ -22,13 +22,17 @@ import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { useLocalSearchParams } from 'expo-router';
+import { useAuthStore } from "@/store/authStore";
 
 const ProjectDetailsScreen: React.FC = () => {
+  
   const [modalVisible, setModalVisible] = useState(false);
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].file;
+  const authToken = useAuthStore.getState().token
 
   const {id} = useLocalSearchParams();
+  console.log(authToken)
   console.log(id);
 
   
