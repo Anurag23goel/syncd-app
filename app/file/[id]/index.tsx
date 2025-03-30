@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -21,22 +21,45 @@ import DateCard from "@/components/Card/DateCard";
 import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
+import { GET_ALL_FOLDERS_FOR_PROJECT } from "@/services/project_user/file_space/folder";
+import { SINGLE_FOLDER } from "@/types/NewApiTypes";
 
 const ProjectDetailsScreen: React.FC = () => {
-  
   const [modalVisible, setModalVisible] = useState(false);
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].file;
-  const authToken = useAuthStore.getState().token
+  const authToken = useAuthStore.getState().token;
+  const { id } = useLocalSearchParams();
+  const projectID = Array.isArray(id) ? id[0] : id;
+  const [folders, setFolders] = useState<SINGLE_FOLDER[]>([]);
 
-  const {id} = useLocalSearchParams();
-  console.log(authToken)
-  console.log(id);
+  const dailyWorkProgressFolders = folders.find(
+    (folder) => folder.FolderType === "DAILY_PROGRESS"
+  );
+  const projectStageFolders = folders.find(
+    (folder) => folder.FolderType === "PROJECT_STAGE"
+  );
 
-  
-  
+  console.log(authToken);
+  console.log(projectID);
+
+  const fetch_all_folders = async () => {
+    try {
+      if (!authToken) {
+        return;
+      }
+      const response = await GET_ALL_FOLDERS_FOR_PROJECT(projectID, authToken);
+      setFolders(response.Folders);
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetch_all_folders();
+  }, [projectID, authToken]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,8 +93,9 @@ const ProjectDetailsScreen: React.FC = () => {
           iconColor="#E74C3C"
         />
 
-        <Text style={styles.sectionTitle}>{t.title}</Text>
 
+
+        {/* <Text style={styles.sectionTitle}>{t.title}</Text>
         <View style={styles.tabsContainer}>
           <View style={styles.tabs}>
             <TouchableOpacity style={styles.activeTab}>
@@ -82,7 +106,6 @@ const ProjectDetailsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-
         <FileItem
           name="audioFile"
           date={t.date}
@@ -118,7 +141,6 @@ const ProjectDetailsScreen: React.FC = () => {
           sharedWith="all"
         />
         <Text style={styles.sectionTitle}>{t.other}</Text>
-
         <FileItem
           name="archive"
           date={t.date}
@@ -132,7 +154,10 @@ const ProjectDetailsScreen: React.FC = () => {
           size={t.filesize}
           iconType="truck"
           sharedWith="all"
-        />
+        /> */}
+
+
+
       </ScrollView>
       <TouchableOpacity
         style={styles.addButton}

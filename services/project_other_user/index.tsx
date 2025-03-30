@@ -1,13 +1,6 @@
-import {
-  ApiErrorResponse,
-  ApiResponse,
-  ApiSuccessResponse,
-  ProjectDetailsResponse,
-  SingleProjectDetails,
-} from "@/types/Apitypes";
+import { ApiResponse, ApiSuccessResponse } from "@/types/Apitypes";
 import axiosInstance from "../index";
 import { API_ROUTES } from "../routes.config";
-import axios from "axios";
 import { GET_ALL_PROJECTS_FOR_USER } from "@/types/NewApiTypes";
 
 /**

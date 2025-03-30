@@ -214,13 +214,15 @@ export interface INVENTORY_SUMMARY {
   totalDamaged: number;
 }
 
-
 // --------------- FILE SPACE TYPES ---------------
 
-export interface SINGLE_FOLDER{
-  
-}
-
-export interface GET_FOLDERS_FOR_PROJECT{
-  
+export interface SINGLE_FOLDER {
+  FolderID: string;
+  ProjectID: string;
+  FolderName: string;
+  FolderType: string; // Add more known types if applicable
+  StageNumber: number | null;
+  CreatedBy: string;
+  createdAt: Date; // ISO date string
+  updatedAt: Date; // ISO date string
 }

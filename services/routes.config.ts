@@ -63,7 +63,8 @@ export const API_ROUTES = {
 
       FOLDER: {
         CREATE_FOLDER: "/fileSpaceRoutes/CreateFolder", // POST
-        GET_FOLDERS_BY_PROJECT: "/fileSpaceRoutes/GetFoldersByProject", // GET
+        GET_FOLDERS_BY_PROJECT:
+          "/fileSpaceRoutes/GetFoldersByProject?ProjectID={{ProjectID}}", // GET
         UPDATE_FOLDER: "/fileSpaceRoutes/UpdateFolder", // PUT
         DELETE_FOLDER: "/fileSpaceRoutes/DeleteFolder", // DELETE
       },

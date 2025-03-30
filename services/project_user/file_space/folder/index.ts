@@ -1,7 +1,7 @@
 import { ApiResponse, ApiSuccessResponse } from "@/types/Apitypes";
 import axiosInstance from "../../../index";
-import API_ROUTES from "@/services/routes.config";
-
+import API_ROUTES, { BASE_URL } from "@/services/routes.config";
+import axios from "axios";
 
 // Create Folder
 export async function createFolder(
@@ -33,24 +33,25 @@ export async function createFolder(
 }
 
 // Get All Folders by Project
-export async function getFoldersByProject(
+export async function GET_ALL_FOLDERS_FOR_PROJECT(
   projectId: string,
-  folderId: string,
   authToken: string
-): Promise<ApiSuccessResponse<any>> {
+) {
   try {
-    const url = `${API_ROUTES.PROJECT_MAIN_USER.FILESPACE.FOLDER.GET_FOLDERS_BY_PROJECT}?ProjectID=${projectId}&FolderID=${folderId}`;
-
-    const { data } = await axiosInstance.get<ApiResponse<any>>(url, {
-      headers: { authToken },
-    });
-
-    return {
-      message: data.message,
-      data: data.data,
-    };
-  } catch (error) {
-    throw error;
+    const response = await axios.get(
+      BASE_URL +
+        API_ROUTES.PROJECT_MAIN_USER.FILESPACE.FOLDER.GET_FOLDERS_BY_PROJECT.replace(
+          "{{ProjectID}}",
+          projectId
+        ),
+      {
+        headers: { authToken },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.log("Error while fetching folders:", error.message);
+    return error;
   }
 }
 
@@ -109,4 +110,3 @@ export async function deleteFolder(
     throw error;
   }
 }
-
