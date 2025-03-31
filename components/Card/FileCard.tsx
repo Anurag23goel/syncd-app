@@ -21,7 +21,7 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-interface FileItemProps {
+export interface FileItemProps {
   name: string;
   date: string;
   size: string;

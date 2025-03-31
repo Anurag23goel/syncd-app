@@ -24,18 +24,21 @@ if (
 
 interface AnimatedProjectCardProps {
   title: string;
-  date: string;
+  date?: string;
   size: string;
   iconName: string;
   iconColor: string;
+  folderSize: number;
+  folderType: "DAILY_PROGRESS" | "PROJECT_STAGE";
 }
 
 const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
   title,
-  date,
   size,
   iconName,
   iconColor,
+  folderType,
+  folderSize,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -52,6 +55,9 @@ const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
     }).start();
   };
 
+  const path =
+    folderType === "DAILY_PROGRESS" ? "dailyProgress" : "projectStages";
+
   return (
     <View style={styles.projectCard}>
       {menuVisible ? (
@@ -65,7 +71,7 @@ const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
             }}
           >
             <Pressable
-              onPress={() => router.push("/file/dailyProgress")}
+              onPress={() => router.push(`/file/${path}`)}
               style={[styles.iconContainer1, { backgroundColor: iconColor }]}
             >
               <Feather name={iconName as any} size={24} color="#FFFFFF" />
@@ -73,7 +79,9 @@ const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
             <View style={styles.contentContainer1}>
               <View style={styles.textContainer}>
                 <Text style={styles.projectTitle}>{title}</Text>
-                <Text style={styles.projectInfo}>{`${date} • ${size}`}</Text>
+                <Text
+                  style={styles.projectInfo}
+                >{`${size} - ${folderSize}`}</Text>
                 <View style={styles.membersContainer}>
                   <MaterialIcons
                     name="people-outline"
@@ -107,7 +115,7 @@ const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
       ) : (
         <>
           <Pressable
-            onPress={() => router.push("/file/dailyProgress")}
+            onPress={() => router.push(`/file/${path}`)}
             style={[styles.iconContainer, { backgroundColor: iconColor }]}
           >
             <Feather name={iconName as any} size={40} color="#FFFFFF" />
@@ -115,7 +123,9 @@ const AnimatedProjectCard: React.FC<AnimatedProjectCardProps> = ({
           <View style={styles.contentContainer}>
             <View style={styles.textContainer}>
               <Text style={styles.projectTitle}>{title}</Text>
-              <Text style={styles.projectInfo}>{`${date} • ${size}`}</Text>
+              <Text
+                style={styles.projectInfo}
+              >{`${size} - ${folderSize}`}</Text>
               <View style={styles.membersContainer}>
                 <MaterialIcons
                   name="people-outline"

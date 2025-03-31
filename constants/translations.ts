@@ -292,7 +292,7 @@ export const translations = {
       add: "Add",
       projectTitle: "Project Title",
       search: "Search",
-      folderSize: "Folder size",
+      folderSize: "Folder Size",
       download: "Download",
       save: "Save",
       share: "Share",

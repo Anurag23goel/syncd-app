@@ -1,6 +1,7 @@
 import { ApiResponse, ApiSuccessResponse } from "@/types/Apitypes";
 import axiosInstance from "../../../index";
-import API_ROUTES from "@/services/routes.config";
+import API_ROUTES, { BASE_URL } from "@/services/routes.config";
+import axios from "axios";
 
 // Get Files by Folder
 export async function getFilesByFolder(
@@ -84,5 +85,25 @@ export async function deleteFile(
     };
   } catch (error) {
     throw error;
+  }
+}
+
+export async function GET_FILES_OF_FOLDER(
+  projectID: string,
+  folderId: string,
+  authToken: string
+) {
+  try {
+    const response = await axios.get(
+      BASE_URL +
+        API_ROUTES.PROJECT_MAIN_USER.FILESPACE.FILE.GET_FILES_BY_FOLDER.replace("{{ProjectID}}",projectID).replace("{{FolderID}}", folderId),
+      {
+        headers: { authToken },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.log("Error while fetching folders:", error.message);
+    return error;
   }
 }

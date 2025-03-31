@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import FileItem from "@/components/Card/FileCard";
@@ -13,12 +13,37 @@ import { router } from "expo-router";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import FileModal from "@/components/Modal/FileModal";
+import { GET_ALL_FOLDERS_FOR_PROJECT } from "@/services/project_user/file_space/folder";
+import { useAuthStore } from "@/store/authStore";
+import { SINGLE_FOLDER } from "@/types/NewApiTypes";
+import FolderItem from "@/components/Card/FolderCard";
 
 const DailyProgress = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].file;
+  const projectID = useAuthStore.getState().projectID;
+  const authToken = useAuthStore.getState().token;
+  const [folders, setFolders] = useState<SINGLE_FOLDER[]>([]);
 
   const [modalVisible, setModalVisible] = useState(false);
+
+  const fetchDailyProgressFolders = async () => {
+    try {
+      if (!projectID || !authToken) return;
+      const response = await GET_ALL_FOLDERS_FOR_PROJECT(projectID, authToken);
+      const filtered = response.Folders.filter(
+        (f: SINGLE_FOLDER) => f.FolderType === "DAILY_PROGRESS"
+      );
+      setFolders(filtered);
+    } catch (error: any) {
+      console.log(error.message);
+      // Show error message or retry button
+    }
+  };
+
+  useEffect(() => {
+    fetchDailyProgressFolders();
+  }, [projectID, authToken]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,34 +58,16 @@ const DailyProgress = () => {
           <Text style={styles.headerTitle}>{t.dailyWorkProgress}</Text>
         </View>
 
-        <FileItem
-          name="Date"
-          date="Date"
-          size="File size"
-          iconType="folder"
-          sharedWith="all"
-        />
-        <FileItem
-          name="Date"
-          date="Date"
-          size="File size"
-          iconType="folder"
-          sharedWith="all"
-        />
-        <FileItem
-          name="Date"
-          date="Date"
-          size="File size"
-          iconType="folder"
-          sharedWith="all"
-        />
-        <FileItem
-          name="Date"
-          date="Date"
-          size="File size"
-          iconType="folder"
-          sharedWith="all"
-        />
+        {folders.map((folder) => (
+          <FolderItem
+            key={folder.FolderID}
+            name={folder.FolderName}
+            date={
+              folder.createdAt ? new Date(folder.createdAt).toDateString() : ""
+            }
+            folderId={folder.FolderID}
+          />
+        ))}
       </ScrollView>
       <TouchableOpacity
         style={styles.addButton}

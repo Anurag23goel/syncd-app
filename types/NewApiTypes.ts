@@ -220,9 +220,23 @@ export interface SINGLE_FOLDER {
   FolderID: string;
   ProjectID: string;
   FolderName: string;
-  FolderType: string; // Add more known types if applicable
+  FolderType: "PROJECT_STAGE" | "DAILY_PROGRESS"; // Add more known types if applicable
   StageNumber: number | null;
   CreatedBy: string;
   createdAt: Date; // ISO date string
   updatedAt: Date; // ISO date string
 }
+
+export interface SINGLE_FILE {
+  FileID: string;
+  FolderID: string;
+  FileName: string;
+  FileType: string;
+  FileURL: string;
+  CloudinaryPublicID: string;
+  UploadedBy: string;
+  IsArchived: boolean;
+  createdAt: string; // ISO string (can be converted to Date)
+  updatedAt: string;
+}
+

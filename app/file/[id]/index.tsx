@@ -34,13 +34,27 @@ const ProjectDetailsScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
   const projectID = Array.isArray(id) ? id[0] : id;
   const [folders, setFolders] = useState<SINGLE_FOLDER[]>([]);
+  const setProjectID = useAuthStore((state) => state.setProjectID);
+  setProjectID(projectID);
 
-  const dailyWorkProgressFolders = folders.find(
-    (folder) => folder.FolderType === "DAILY_PROGRESS"
-  );
-  const projectStageFolders = folders.find(
-    (folder) => folder.FolderType === "PROJECT_STAGE"
-  );
+  // const dailyWorkProgressFolders = folders.find(
+  //   (folder) => folder.FolderType === "DAILY_PROGRESS"
+  // );
+  // const projectStageFolders = folders.find(
+  //   (folder) => folder.FolderType === "PROJECT_STAGE"
+  // );
+
+  const dailyWorkProgressFolders = [];
+  const projectStageFolders = [];
+  for (const folder of folders) {
+    if (folder.FolderType === "DAILY_PROGRESS") {
+      dailyWorkProgressFolders.push(folder);
+    }
+    if (folder.FolderType === "PROJECT_STAGE") {
+      projectStageFolders.push(folder);
+    }
+  }
+
 
   console.log(authToken);
   console.log(projectID);
@@ -84,6 +98,8 @@ const ProjectDetailsScreen: React.FC = () => {
           size={t.folderSize}
           iconName="calendar"
           iconColor="#002D62"
+          folderSize={dailyWorkProgressFolders.length}
+          folderType="DAILY_PROGRESS"
         />
         <AnimatedProjectCard
           title={t.projectStage}
@@ -91,9 +107,9 @@ const ProjectDetailsScreen: React.FC = () => {
           size={t.folderSize}
           iconName="database"
           iconColor="#E74C3C"
+          folderSize={projectStageFolders.length}
+          folderType="PROJECT_STAGE"
         />
-
-
 
         {/* <Text style={styles.sectionTitle}>{t.title}</Text>
         <View style={styles.tabsContainer}>
@@ -155,9 +171,6 @@ const ProjectDetailsScreen: React.FC = () => {
           iconType="truck"
           sharedWith="all"
         /> */}
-
-
-
       </ScrollView>
       <TouchableOpacity
         style={styles.addButton}

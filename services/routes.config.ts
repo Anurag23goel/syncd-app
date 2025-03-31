@@ -46,7 +46,7 @@ export const API_ROUTES = {
     },
     FILESPACE: {
       FILE: {
-        GET_FILES_BY_FOLDER: "/fileSpaceRoutes/GetFilesByFolder", // GET
+        GET_FILES_BY_FOLDER: "/fileSpaceRoutes/GetFilesByFolder?ProjectID={{ProjectID}}&FolderID={{FolderID}}", // GET
         UPLOAD_FILE_TO_FOLDER: "/fileSpaceRoutes/UploadFileToFolder", // POST
         DELETE_FILE: "/fileSpaceRoutes/DeleteFile", // DELETE
       },
