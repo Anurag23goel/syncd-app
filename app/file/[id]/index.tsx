@@ -56,8 +56,9 @@ const ProjectDetailsScreen: React.FC = () => {
   }
 
 
-  console.log(authToken);
-  console.log(projectID);
+
+  console.log("AUTH TOKEN OF USER - ", authToken);
+  console.log("PROJECT ID OF USER - ", projectID);
 
   const fetch_all_folders = async () => {
     try {

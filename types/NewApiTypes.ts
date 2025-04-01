@@ -240,3 +240,37 @@ export interface SINGLE_FILE {
   updatedAt: string;
 }
 
+export interface MEETING_PAYLOAD {
+  Title: string;
+  Description: string;
+  Date: string; // Format: YYYY-MM-DD
+  StartTime: string; // ISO 8601 datetime string
+  EndTime: string; // ISO 8601 datetime string
+  MeetingType: "VIRTUAL" | "IN_PERSON";
+  MeetingPlatform: "GMEET" | "ZOOM" | "MS_TEAMS"| string;
+  MeetingLink: string;
+  Location: string;
+  Participants: string[]; // array of user IDs
+  TeamIDs: string[]; // array of team IDs
+  CreatedBy: string; // user ID of the meeting creator
+  CreatedAt: string; // ISO datetime string
+  UpdatedAt: string; // ISO datetime string
+}
+
+export interface MEETING_RESPONSE {
+  MeetingID: string;
+  Title: string;
+  Description: string;
+  Date: string; // ISO date (e.g., "2025-03-20")
+  StartTime: string; // ISO datetime (e.g., "2025-03-20T10:00:00.000Z")
+  EndTime: string; // ISO datetime
+  MeetingType: "VIRTUAL" | "IN_PERSON";
+  MeetingPlatform: "GMEET" | "ZOOM" | "MS_TEAMS" | string;
+  MeetingLink: string | null;
+  Location: string | null;
+  Participants: string[]; // user IDs
+  TeamIDs: string[]; // team IDs
+  CreatedBy: string; // user ID
+  updatedAt: Date; // ISO datetime
+  createdAt: Date; // ISO datetime
+}

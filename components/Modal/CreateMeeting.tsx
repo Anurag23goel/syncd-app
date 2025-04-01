@@ -10,11 +10,20 @@ import {
   Platform,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import { Feather, EvilIcons, FontAwesome6, Entypo } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { CREATE_MEETING } from "@/services/meetings";
+import { useAuthStore } from "@/store/authStore";
+import { MEETING_PAYLOAD } from "@/types/NewApiTypes";
+
+interface MeetingModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+}
 
 interface MeetingModalProps {
   isVisible: boolean;
@@ -30,14 +39,15 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
   const [entireTeam, setEntireTeam] = useState(false);
   const [meetingLink, setMeetingLink] = useState("");
   const [meetingLocation, setMeetingLocation] = useState("");
-  const [selectedPeople, setSelectedPeople] = useState([
-    "Person 1",
-    "Person 2",
-  ]);
+  const [selectedPeople, setSelectedPeople] = useState([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [newPerson, setNewPerson] = useState("");
+
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.createMeeting;
+
+  const authToken = useAuthStore((state) => state.token);
+  const currentUserId = useAuthStore((state) => state.user?.UserID);
 
   const handleAddPerson = () => {
     if (newPerson.trim() !== "") {
@@ -52,12 +62,79 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) setDate(selectedDate);
+    if (selectedDate)
+      setDate((prev) => {
+        const time = prev ? new Date(prev) : new Date();
+        return new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          time.getHours(),
+          time.getMinutes()
+        );
+      });
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(false);
-    if (selectedTime) setDate(selectedTime);
+    if (selectedTime)
+      setDate((prev) => {
+        const base = prev || new Date();
+        return new Date(
+          base.getFullYear(),
+          base.getMonth(),
+          base.getDate(),
+          selectedTime.getHours(),
+          selectedTime.getMinutes()
+        );
+      });
+  };
+
+  const handleCreateMeeting = async () => {
+    if (
+      !title ||
+      !date ||
+      !selectedPlatform ||
+      (!entireTeam && selectedPeople.length === 0)
+    ) {
+      Alert.alert("Missing Fields", "Please fill all required fields.");
+      return;
+    }
+
+    const payload: MEETING_PAYLOAD = {
+      Title: title,
+      Description: description,
+      Date: date.toISOString().split("T")[0],
+      StartTime: date.toISOString(),
+      EndTime: new Date(date.getTime() + 90 * 60000).toISOString(),
+      MeetingType: "VIRTUAL",
+      MeetingPlatform:
+        selectedPlatform === "zoom"
+          ? "ZOOM"
+          : selectedPlatform === "meet"
+          ? "GMEET"
+          : selectedPlatform === "ms"
+          ? "MS_TEAMS"
+          : "OTHER",
+      MeetingLink: meetingLink,
+      Location: meetingLocation,
+      Participants: selectedPeople,
+      TeamIDs: entireTeam ? ["team-g2pc66t8m8b1f60h"] : [],
+      CreatedBy: currentUserId,
+      UpdatedAt: new Date().toISOString(),
+      CreatedAt: new Date().toISOString(),
+    };
+
+    try {
+      if (!authToken) {
+        return;
+      }
+      const response = await CREATE_MEETING(payload, authToken);
+      Alert.alert("Success", "Meeting created successfully!");
+      onClose();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Something went wrong.");
+    }
   };
 
   return (
@@ -158,9 +235,12 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
                   onChangeText={setNewPerson}
                   placeholderTextColor="#8C8C8C"
                   style={styles.addPeopleInput}
+                  onSubmitEditing={handleAddPerson}
                 />
               </View>
-              <Text style={styles.addButtonText}>Add</Text>
+              <TouchableOpacity onPress={handleAddPerson}>
+                <Text style={styles.addButtonText}>Add</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.selectedPeopleContainer}>
@@ -186,67 +266,39 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
             </View>
 
             <View style={styles.platformIcons}>
-              <TouchableOpacity
-                style={[
-                  styles.platformOption,
-                  selectedPlatform === "zoom"
-                    ? styles.selected
-                    : styles.notSelected,
-                ]}
-                onPress={() => setSelectedPlatform("zoom")}
-              >
-                <Image
-                  source={require("../../assets/images/assets/zoom.png")}
-                  style={styles.platformIcon}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.platformOption,
-                  selectedPlatform === "meet"
-                    ? styles.selected
-                    : styles.notSelected,
-                ]}
-                onPress={() => setSelectedPlatform("meet")}
-              >
-                <Image
-                  source={require("../../assets/images/assets/meet.png")}
-                  style={styles.platformIcon}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.platformOption,
-                  selectedPlatform === "ms"
-                    ? styles.selected
-                    : styles.notSelected,
-                ]}
-                onPress={() => setSelectedPlatform("ms")}
-              >
-                <Image
-                  source={require("../../assets/images/assets/ms.png")}
-                  style={styles.platformIcon}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.platformOption,
-                  selectedPlatform === "users"
-                    ? styles.selected
-                    : styles.notSelected,
-                ]}
-                onPress={() => setSelectedPlatform("users")}
-              >
-                <Feather
-                  name="users"
-                  size={24}
-                  color={selectedPlatform === "users" ? "#FFF" : "#6B6B6B"}
-                />
-              </TouchableOpacity>
+              {["zoom", "meet", "ms", "users"].map((platform) => (
+                <TouchableOpacity
+                  key={platform}
+                  style={[
+                    styles.platformOption,
+                    selectedPlatform === platform
+                      ? styles.selected
+                      : styles.notSelected,
+                  ]}
+                  onPress={() => setSelectedPlatform(platform)}
+                >
+                  {platform === "users" ? (
+                    <Feather
+                      name="users"
+                      size={24}
+                      color={selectedPlatform === "users" ? "#FFF" : "#6B6B6B"}
+                    />
+                  ) : (
+                    <Image
+                      source={
+                        platform === "zoom"
+                          ? require("../../assets/images/assets/zoom.png")
+                          : platform === "meet"
+                          ? require("../../assets/images/assets/meet.png")
+                          : require("../../assets/images/assets/ms.png")
+                      }
+                      style={styles.platformIcon}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
             </View>
+
             <View style={styles.linkContainer}>
               <TextInput
                 style={styles.linkInput}
@@ -257,7 +309,10 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
               />
             </View>
 
-            <TouchableOpacity style={styles.createButton}>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateMeeting}
+            >
               <Text style={styles.createButtonText}>Create meeting</Text>
             </TouchableOpacity>
           </ScrollView>
