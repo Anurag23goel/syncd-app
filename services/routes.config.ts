@@ -46,7 +46,8 @@ export const API_ROUTES = {
     },
     FILESPACE: {
       FILE: {
-        GET_FILES_BY_FOLDER: "/fileSpaceRoutes/GetFilesByFolder?ProjectID={{ProjectID}}&FolderID={{FolderID}}", // GET
+        GET_FILES_BY_FOLDER:
+          "/fileSpaceRoutes/GetFilesByFolder?ProjectID={{ProjectID}}&FolderID={{FolderID}}", // GET
         UPLOAD_FILE_TO_FOLDER: "/fileSpaceRoutes/UploadFileToFolder", // POST
         DELETE_FILE: "/fileSpaceRoutes/DeleteFile", // DELETE
       },
@@ -125,6 +126,10 @@ export const API_ROUTES = {
     UPDATE_MEETING: `${BASE_URL}/meetingRoutes/UpdateMeeting`,
     GET_USER_MEETING: `${BASE_URL}/meetingRoutes/GetUserMeetings`,
     DELETE_MEETING: `${BASE_URL}/meetingRoutes/DeleteMeeting/meeting-{{meetingID}}`,
+  },
+  NOTIFICATIONS: {
+    REGISTER_EXPO_TOKEN: `${BASE_URL}/userRoutes/updateExpoToken`,
+    TEST_NOTIFICATION : `${BASE_URL}/userRoutes/testNotification`,
   },
 } as const;
 

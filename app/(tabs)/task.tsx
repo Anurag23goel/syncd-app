@@ -17,6 +17,8 @@ import TaskManagement from "@/components/Card/TaskManagement";
 import TaskModal from "@/components/Modal/TeamTask";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { SEND_TEST_NOTIFICATION } from "@/services/notifications";
+import { useAuthStore } from "@/store/authStore";
 
 interface TaskStatus {
   label: string;
@@ -28,6 +30,8 @@ const Index = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].task;
+  const authToken = useAuthStore.getState().token;
+  console.log("AUTH TOKEN - ", authToken);
 
   const taskStatuses: TaskStatus[] = [
     { label: t.completed, value: 5, color: "#007BFF" },
@@ -132,7 +136,25 @@ const Index = () => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{t.tasks}</Text>
           <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color="#000" />
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              onPress={() =>
+                SEND_TEST_NOTIFICATION(
+                  {
+                    title: "idk",
+                    body: "test notif",
+                    data: {
+                      message: "this data will be passing when user clicks on it",
+                      type: "custom",
+                      additionalInfo: "whatever you need",
+                    },
+                  },
+                  authToken
+                )
+              }
+              color="#000"
+            />
           </TouchableOpacity>
         </View>
 
