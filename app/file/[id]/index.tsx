@@ -55,8 +55,6 @@ const ProjectDetailsScreen: React.FC = () => {
     }
   }
 
-
-
   console.log("AUTH TOKEN OF USER - ", authToken);
   console.log("PROJECT ID OF USER - ", projectID);
 
@@ -87,10 +85,6 @@ const ProjectDetailsScreen: React.FC = () => {
             <Feather name="chevron-left" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t.projectTitle}</Text>
-        </View>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="gray" />
-          <TextInput placeholder={t.search} style={styles.searchInput} />
         </View>
 
         <AnimatedProjectCard
@@ -173,12 +167,7 @@ const ProjectDetailsScreen: React.FC = () => {
           sharedWith="all"
         /> */}
       </ScrollView>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setModalVisible(true)}
-      >
-        <Ionicons name="add" size={24} color="white" />
-      </TouchableOpacity>
+
       <FileModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
