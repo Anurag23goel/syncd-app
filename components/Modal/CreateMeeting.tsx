@@ -15,6 +15,11 @@ import { Feather, EvilIcons, FontAwesome6, Entypo } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { createMeeting } from "@/services/meetings/index"; 
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CreateMeetingPayload } from "@/types/Apitypes";
+import { useAuthStore } from "@/store/authStore";
 
 interface MeetingModalProps {
   isVisible: boolean;
@@ -22,11 +27,15 @@ interface MeetingModalProps {
 }
 
 const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [entireTeam, setEntireTeam] = useState(false);
   const [meetingLink, setMeetingLink] = useState("");
   const [meetingLocation, setMeetingLocation] = useState("");
@@ -36,6 +45,8 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
   ]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [newPerson, setNewPerson] = useState("");
+  const [isVirtual, setIsVirtual] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].modal.createMeeting;
 
@@ -55,10 +66,117 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
     if (selectedDate) setDate(selectedDate);
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) setDate(selectedTime);
+  const handleTimeChange = (type: "start" | "end", event: any, selectedTime?: Date) => {
+    if (type === "start") {
+      setShowStartTimePicker(false);
+      if (selectedTime) setStartTime(selectedTime);
+    } else if (type === "end") {
+      setShowEndTimePicker(false);
+      if (selectedTime) setEndTime(selectedTime);
+    }
   };
+  
+
+  
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      console.log('[MEETING] Submission started');
+  
+      // Validate form data
+      if (!title) {
+        console.log("Error", "Meeting title is required");
+        setIsLoading(false);
+        return;
+      }
+      if (!date) {
+        console.log("Error", "Meeting date is required");
+        setIsLoading(false);
+        return;
+      }
+      if (!startTime || !endTime) {
+        console.log("Error", "Meeting start and end times are required");
+        setIsLoading(false);
+        return;
+      }
+      if (isVirtual && !meetingLink) {
+        console.log("Error", "Meeting link is required for virtual meetings");
+        setIsLoading(false);
+        return;
+      }
+      if (!isVirtual && !meetingLocation) {
+        console.log("Error", "Meeting location is required for in-person meetings");
+        setIsLoading(false);
+        return;
+      }
+  
+      const formattedDate = date.toISOString().split('T')[0];
+  
+      // Format times as ISO strings
+      const formattedStartTime = startTime.toISOString();
+      const formattedEndTime = endTime.toISOString();
+  
+      // Get user ID from storage
+      const userId = await AsyncStorage.getItem('userId') || "default-user";
+  
+      // Get auth token from storage
+      const authToken = useAuthStore.getState().token;
+        
+      // 🔹 Log the auth token
+      console.log('[DEBUG] Retrieved authToken:', authToken);
+  
+      if (!authToken) {
+        console.log("Error", "Authentication required. Please log in again.");
+        setIsLoading(false);
+        return;
+      }
+  
+      const meetingPayload: CreateMeetingPayload = {
+        Title: title,
+        Description: description,
+        Date: formattedDate,
+        StartTime: formattedStartTime,
+        EndTime: formattedEndTime,
+        MeetingType: isVirtual ? "VIRTUAL" : "IN_PERSON",
+        MeetingPlatform: isVirtual ? (selectedPlatform || "GMEET") : "",
+        MeetingLink: isVirtual ? meetingLink : null,
+        Location: !isVirtual ? meetingLocation : null,
+        Participants: selectedPeople,
+        TeamIDs: entireTeam ? ["all-team"] : [],
+        CreatedBy: userId,
+        CreatedAt: new Date().toISOString(),
+        UpdatedAt: new Date().toISOString()
+      };
+  
+      console.log('[MEETING] Sending payload:', meetingPayload);
+  
+      // Call API to create meeting
+      const response = await createMeeting(authToken, meetingPayload);
+  
+      console.log('[MEETING] Meeting created successfully:', response);
+  
+      // Show success message
+      console.log("Success", "Meeting created successfully", [{ text: "OK", onPress: onClose }]);
+  
+      // Clear form
+      setTitle("");
+      setDescription("");
+      setDate(null);
+      setStartTime(null);
+      setEndTime(null);
+      setMeetingLink("");
+      setMeetingLocation("");
+      setSelectedPeople(["Person 1", "Person 2"]);
+      setSelectedPlatform("GMEET");
+      setIsVirtual(true);
+    } catch (error: any) {
+      console.error('[MEETING] Submission error:', error);
+      console.log("Error", error.message || "Failed to create meeting");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
 
   return (
     <Modal visible={isVisible} transparent animationType="fade">
@@ -92,48 +210,75 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
               placeholderTextColor="#8C8C8C"
             />
 
-            <View style={styles.dateTimeContainer}>
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.dateTimeText}>
-                  {date ? date.toLocaleDateString() : "Date"}
-                </Text>
-                <Feather name="calendar" size={20} color="#8C8C8C" />
-              </TouchableOpacity>
+{/* Date Picker */}
+<TouchableOpacity
+  style={styles.dateInput}
+  onPress={() => setShowDatePicker(true)}
+>
+  <Text style={styles.dateTimeText}>
+    {date ? date.toLocaleDateString() : "Date"}
+  </Text>
+  <Feather name="calendar" size={20} color="#8C8C8C" />
+</TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.timeInput}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Text style={styles.dateTimeText}>
-                  {date
-                    ? date.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "Time"}
-                </Text>
-                <Feather name="clock" size={20} color="#8C8C8C" />
-              </TouchableOpacity>
-            </View>
+{/* Time Pickers (Start & End Time) */}
+<View style={styles.dateTimeContainer}>
+  {/* Start Time */}
+  <TouchableOpacity
+    style={styles.timeInput}
+    onPress={() => setShowStartTimePicker(true)}
+  >
+    <Text style={styles.dateTimeText}>
+      {startTime
+        ? startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "Start Time"}
+    </Text>
+    <Feather name="clock" size={20} color="#8C8C8C" />
+  </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={date || new Date()}
-                mode="date"
-                onChange={handleDateChange}
-              />
-            )}
+  {/* End Time */}
+  <TouchableOpacity
+    style={styles.timeInput}
+    onPress={() => setShowEndTimePicker(true)}
+  >
+    <Text style={styles.dateTimeText}>
+      {endTime
+        ? endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "End Time"}
+    </Text>
+    <Feather name="clock" size={20} color="#8C8C8C" />
+  </TouchableOpacity>
+</View>
 
-            {showTimePicker && (
-              <DateTimePicker
-                value={date || new Date()}
-                mode="time"
-                onChange={handleTimeChange}
-              />
-            )}
+{showDatePicker && (
+  <DateTimePicker
+    value={date || new Date()} // Default to selected date or current date
+    mode="date" // Date selection mode
+    onChange={handleDateChange} // Function to handle selected date
+  />
+)}
+
+
+{/* Start Time Picker Modal */}
+{showStartTimePicker && (
+  <DateTimePicker
+    value={startTime || new Date()}
+    mode="time"
+    onChange={(event, selectedTime) => handleTimeChange("start", event, selectedTime)}
+  />
+)}
+
+{/* End Time Picker Modal */}
+{showEndTimePicker && (
+  <DateTimePicker
+    value={endTime || new Date()}
+    mode="time"
+    onChange={(event, selectedTime) => handleTimeChange("end", event, selectedTime)}
+  />
+)}
+
+
+
 
             <View style={styles.addPeopleContainer}>
               <View style={styles.addPeopleLeft}>
@@ -257,7 +402,7 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ isVisible, onClose }) => {
               />
             </View>
 
-            <TouchableOpacity style={styles.createButton}>
+            <TouchableOpacity onPress={handleSubmit} style={styles.createButton}>
               <Text style={styles.createButtonText}>Create meeting</Text>
             </TouchableOpacity>
           </ScrollView>

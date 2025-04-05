@@ -319,6 +319,8 @@ interface Task {
   subtasks: SubTask[];
 }
 
+
+
 interface SubTask {
   TaskID: string;
   ProjectID: string;
@@ -789,21 +791,26 @@ export interface SearchUserResponse {
   UserContact: string | null;
   UserProfilePicture: string | null;
 }
+export type Priority = "HIGH" | "MEDIUM" | "LOW";
+export type AssignmentType = "USER" | "TEAM";
 
 /**
- * Type for creating a new task
+ * Base type for creating any task
  */
 export interface CreateTaskPayload {
   Title: string;
   Description: string;
   StartDate: string;
   EndDate: string;
-  Priority: "LOW" | "MEDIUM" | "HIGH";
-  AssignmentType: "USER" | "TEAM";
-  AssignedUserID: string;
-  CreatorNotes: string;
+  Priority: string;
   ProjectID: string;
+  CreatorNotes?: string;
+  AssignmentType: AssignmentType;
+  AssignedUserID?: string; // Optional for team-based assignments
+  AssignedTeamID?: string; // Optional for team-based assignments
+   
 }
+
 
 /**
  * Type for creating a new team task
@@ -975,4 +982,60 @@ export interface MeetingResponse {
  */
 export interface MeetingsListResponse {
   meetings: MeetingResponse[];
+}
+
+
+/**
+ * Type for creating a new project
+ */
+// Base response types
+// In @/types/Apitypes.ts
+// Add these interfaces
+
+export interface CreateProjectPayload {
+  ProjectName: string;
+  ProjectAdminIDs: string[];
+  ProjectDescription: string;
+  ProjectCode: string;
+  ProjectArea: string;
+  StartDate: string;
+  EndDate: string;
+  Budget: number;
+  Currency: string;
+  ProjectLocation: string;
+  ProjectMapLink: string;
+  ProjectThumbnail: string;
+}
+
+export interface ProjectResponse {
+  ProjectID: string;
+  ProjectName: string;
+  ProjectAdminIDs: string[];
+  ProjectDescription: string;
+  ProjectCode: string;
+  ProjectArea: string;
+  StartDate: string;
+  EndDate: string;
+  Budget: number;
+  Currency: string;
+  ProjectLocation: string;
+  ProjectMapLink: string;
+  ProjectThumbnail: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+}
+
+/*
+for creaitng folder and files in folder 
+*/
+export interface CreateFolderPayload {
+  ProjectID: string;
+  FolderName: string;
+  FolderType: "DAILY_PROGRESS" | string; // Use union type for allowed values
+}
+
+export interface UploadFilePayload {
+  ProjectID: string;
+  FolderID: string;
+  Files: File[];
 }

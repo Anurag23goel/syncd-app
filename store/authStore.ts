@@ -9,6 +9,7 @@ interface AuthState {
   isVerified: boolean;
   pendingVerification: boolean;
   registrationEmail: string | null;
+  projectID: string | null;
 
   // Actions
   setToken: (token: string | null) => void;
@@ -18,6 +19,7 @@ interface AuthState {
   setPendingVerification: (email: string) => void;
   setVerified: (status: boolean) => void;
   clearRegistrationState: () => void;
+  setProjectID: (id: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       isVerified: false,
       pendingVerification: false,
       registrationEmail: null,
+      projectID: null,
 
       setToken: (token) => set({ token, isAuthenticated: !!token }),
       setUser: (user) => set({ user }),
@@ -63,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
           pendingVerification: false,
           registrationEmail: null,
         }),
+        setProjectID: (id) => set({ projectID: id }), // ✅ action added here
     }),
     {
       name: "auth-storage",
@@ -72,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         isVerified: state.isVerified,
+        projectID: state.projectID
       }),
     }
   )
