@@ -31,6 +31,8 @@ export async function SEND_TEST_NOTIFICATION(
   authToken: string | null
 ) {
   try {
+    console.log(notification_payload);
+    
     if (authToken === null) {
       console.log("Auth token not found and is required");
 

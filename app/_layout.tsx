@@ -25,7 +25,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
   }),
 });
 
@@ -59,6 +59,8 @@ async function registerForPushNotificationsAsync(authToken: string) {
 
     expoToken = (await Notifications.getExpoPushTokenAsync()).data;
 
+    console.log(expoToken);
+    
     if (authToken) {
       await SEND_EXPO_TOKEN_TO_BACKEND(expoToken, authToken);
     }
@@ -104,6 +106,8 @@ export default function RootLayout() {
 
     registerForPushNotificationsAsync(authToken).then((token) => {
       if (token) {
+        console.log("SETTING EXPO PUSH TOKEN");
+        
         setExpoPushToken(token);
       }
     });

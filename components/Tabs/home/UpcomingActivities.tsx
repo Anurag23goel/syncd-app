@@ -165,32 +165,7 @@ const UpcomingActivities: React.FC = () => {
       }
     };
     fetchMeetingsData();
-  },[]);
-
-  // FETCHING TASKS DATA
-  // useEffect(() => {
-  //   const fetchTasksData = async () => {
-  //     const authToken = useAuthStore.getState().token;
-
-  //     if (!authToken) {
-  //       console.error("No auth token found!");
-  //       return;
-  //     }
-
-  //     try {
-  //       const response = await getTasks( "", authToken);
-
-  //       setTasksData(response.data?.data);
-  //     } catch (error) {
-  //       console.error("Error fetching meetings:", error);
-  //     }
-  //   };
-  //   fetchTasksData();
-  // },[]);
-
-  
-
-  
+  }, []);
 
   const tasksData = [
     { id: "1", title: "Task 1", completed: false },
@@ -214,7 +189,7 @@ const UpcomingActivities: React.FC = () => {
       meetIcon={{
         width: 16,
         height: 16,
-        marginRight: 6
+        marginRight: 6,
       }}
     />
   );
