@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416370783596",
+    "project_id": "syncd-502c5",
+    "storage_bucket": "syncd-502c5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416370783596:android:f1516adbb762f3d221af49",
+        "android_client_info": {
+          "package_name": "com.ansh.tsx.syncd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeZlNNC8hz2ej4FZXnUtfzZ1I8_Tfgmvo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

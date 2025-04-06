@@ -100,10 +100,10 @@ interface Task {
 
 const TaskItem: React.FC<{
   task: Task;
-  onToggle: (id: string) => void;
+  // onToggle: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-}> = ({ task, onToggle, onEdit, onDelete }) => (
+}> = ({ task, onEdit, onDelete }) => (
   <View style={styles.taskItem}>
     <TouchableOpacity onPress={() => onToggle(task.id)}>
       {task.completed ? (
@@ -182,31 +182,31 @@ const UpcomingActivities: React.FC = () => {
     Notes: string;
   }
 
-  const toggleTaskCompletion = (id: string) => {
-    console.log("Toggle Task Completion:", id);
-    try {
-      // You'll need to get the ProjectID for the current task
-      // This could come from the task item itself, component props, or context
-      const projectId = item.ProjectID; // Replace with how you're getting the projectId
+  // const toggleTaskCompletion = (id: string) => {
+  //   console.log("Toggle Task Completion:", id);
+  //   try {
+  //     // You'll need to get the ProjectID for the current task
+  //     // This could come from the task item itself, component props, or context
+  //     const projectId = item.ProjectID; // Replace with how you're getting the projectId
       
-      // You might want to get notes from user input or set a default
-      const notes = "Task completed"; // Replace with user input if needed
+  //     // You might want to get notes from user input or set a default
+  //     const notes = "Task completed"; // Replace with user input if needed
       
-      const completeData: MarkTaskCompletePayload = {
-        ProjectID: projectId,
-        TaskID: taskId,
-        Notes: notes
-      };
-      const response = await markTaskAsComplete(completeData);
+  //     const completeData: MarkTaskCompletePayload = {
+  //       ProjectID: projectId,
+  //       TaskID: taskId,
+  //       Notes: notes
+  //     };
+  //     const response = markTaskAsComplete(completeData);
     
-      console.log("Task marked as complete:", response);
-      console.log("Success", "Task marked as complete!");
+  //     console.log("Task marked as complete:", response);
+  //     console.log("Success", "Task marked as complete!");
     
-  } catch (error: any) {
-    console.error("Error marking task as complete:", error);
-    console.log("Error", error.message || "Failed to mark task as complete.");
-  }
-  };
+  // } catch (error: any) {
+  //   console.error("Error marking task as complete:", error);
+  //   console.log("Error", error.message || "Failed to mark task as complete.");
+  // }
+  // };
 
   const renderMeetingItem = ({ item }: { item: (typeof meetingsData)[0] }) => (
     <ActivityCard
@@ -226,7 +226,7 @@ const UpcomingActivities: React.FC = () => {
   const renderTaskItem = ({ item }: { item: Task }) => (
     <TaskItem
       task={item}
-      onToggle={toggleTaskCompletion}
+      // onToggle={(id) => toggleTaskCompletion(id)}
       onEdit={(id) => console.log("Edit Task:", id)}
       onDelete={(id) => console.log("Delete Task:", id)}
     />

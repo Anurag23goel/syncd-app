@@ -3,7 +3,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -16,6 +16,7 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { SEND_EXPO_TOKEN_TO_BACKEND } from "@/services/notifications";
 import { useAuthStore } from "@/store/authStore";
+import { requestAndroidNotificationPermission } from "./notification/permission";
 
 // Prevent splash from hiding automatically
 SplashScreen.preventAutoHideAsync();
@@ -32,8 +33,15 @@ Notifications.setNotificationHandler({
 // Push Notification Setup Function (authToken passed as arg)
 async function registerForPushNotificationsAsync(authToken: string) {
   let expoToken;
+  const setExpoToken = useAuthStore.getState().setExpoPushToken;
 
   if (Platform.OS === "android") {
+    const granted = await requestAndroidNotificationPermission();
+    if (!granted) {
+      console.warn("POST_NOTIFICATIONS permission not granted");
+      return;
+    }
+
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
@@ -43,8 +51,7 @@ async function registerForPushNotificationsAsync(authToken: string) {
   }
 
   if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
@@ -58,11 +65,11 @@ async function registerForPushNotificationsAsync(authToken: string) {
     }
 
     expoToken = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log("Expo Push Token:", expoToken);
 
-    console.log(expoToken);
-    
     if (authToken) {
       await SEND_EXPO_TOKEN_TO_BACKEND(expoToken, authToken);
+      setExpoToken(expoToken); // ✅ Save token in Zustand
     }
   } else {
     alert("Must use physical device for Push Notifications");
@@ -87,9 +94,9 @@ export default function RootLayout() {
     "SFPro-Ultralight": require("../assets/fonts/SF-Pro-Display-Ultralight.ttf"),
   });
 
-  const [expoPushToken, setExpoPushToken] = useState("");
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
+  const hasRegisteredPush = useRef(false); // ✅ prevent multiple registrations
 
   // Hide splash screen after fonts load
   useEffect(() => {
@@ -102,15 +109,11 @@ export default function RootLayout() {
 
   // Register push notification only if authToken is present
   useEffect(() => {
-    if (!authToken) return;
+    if (!authToken || hasRegisteredPush.current) return;
 
-    registerForPushNotificationsAsync(authToken).then((token) => {
-      if (token) {
-        console.log("SETTING EXPO PUSH TOKEN");
-        
-        setExpoPushToken(token);
-      }
-    });
+    hasRegisteredPush.current = true;
+
+    registerForPushNotificationsAsync(authToken);
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {

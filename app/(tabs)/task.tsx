@@ -32,6 +32,9 @@ const Index = () => {
   const t = translations[language].task;
   const authToken = useAuthStore.getState().token;
   console.log("AUTH TOKEN - ", authToken);
+  const expoToken = useAuthStore.getState().expoPushToken;
+  console.log("EXPO TOKEN - ", expoToken);
+  
 
   const taskStatuses: TaskStatus[] = [
     { label: t.completed, value: 5, color: "#007BFF" },
@@ -150,7 +153,8 @@ const Index = () => {
                       additionalInfo: "whatever you need",
                     },
                   },
-                  authToken
+                  authToken,
+                  expoToken,
                 )
               }
               color="#000"

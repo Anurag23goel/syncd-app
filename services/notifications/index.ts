@@ -1,5 +1,6 @@
 import axios from "axios";
 import API_ROUTES from "../routes.config";
+import { DivideCircleIcon } from "lucide-react-native";
 
 export async function SEND_EXPO_TOKEN_TO_BACKEND(
   expoToken: string,
@@ -28,8 +29,10 @@ export async function SEND_EXPO_TOKEN_TO_BACKEND(
 
 export async function SEND_TEST_NOTIFICATION(
   notification_payload: any,
-  authToken: string | null
+  authToken: string | null,
+  expoToken: string | null
 ) {
+  if(!authToken || !expoToken) return;
   try {
     console.log(notification_payload);
     
@@ -48,6 +51,7 @@ export async function SEND_TEST_NOTIFICATION(
           type: notification_payload.data.type,
           additionalInfo: notification_payload.data.additionalInfo,
         },
+        ExpoToken: expoToken
       },
       {
         headers: { authToken },
@@ -58,3 +62,10 @@ export async function SEND_TEST_NOTIFICATION(
     console.log("Error while sending test notification - ", error.message);
   }
 }
+
+
+
+
+
+
+
