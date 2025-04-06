@@ -248,8 +248,8 @@ export interface MEETING_PAYLOAD {
   EndTime: string; // ISO 8601 datetime string
   MeetingType: "VIRTUAL" | "IN_PERSON";
   MeetingPlatform: "GMEET" | "ZOOM" | "MS_TEAMS"| string;
-  MeetingLink: string;
-  Location: string;
+  MeetingLink: string | null;
+  Location: string | null;
   Participants: string[]; // array of user IDs
   TeamIDs: string[]; // array of team IDs
   CreatedBy: string; // user ID of the meeting creator
