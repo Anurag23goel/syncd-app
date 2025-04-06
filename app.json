@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "sync-d",
-    "slug": "sync-d",
+    "name": "SyncD",
+    "slug": "syncd",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/sync.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/sync.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.ansh.tsx.syncd"
@@ -25,7 +25,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/sync.png"
     },
     "plugins": [
       "expo-router"
@@ -38,10 +38,10 @@
         "origin": false
       },
       "eas": {
-        "projectId": "b7f4ec6d-dd41-44b7-b8e6-da984055fe32"
+        "projectId": "7e409ef0-6dda-4468-b7da-5a97d77fcda9"
       }
     },
-    "owner": "ansh.tsx",
+    "owner": "anurag23goel",
     "runtimeVersion": {
       "policy": "appVersion"
     },

@@ -37,6 +37,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const loginUser = useAuthStore((state) => state.login);
+  const authToken = useAuthStore((state) => state.token);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -64,6 +65,15 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if(authToken) {
+      router.replace("/(tabs)");
+    }
+    return () => {
+      setIsLoading(false);
+    };
+  }, []);
 
   // FORGOT PASSWORD INTEGRATION
   const forgotPasswordHandler = async () => {
