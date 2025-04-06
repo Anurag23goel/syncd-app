@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -25,6 +26,10 @@ import * as DocumentPicker from "expo-document-picker";
 import { moderateScale } from "@/utils/spacing"; // Import moderateScale
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { ProjectCreateRequest } from "@/types/Apitypes";
+import {createProject} from "@/services/super_admin/project/index"
+
+
 
 interface Assignee {
   id: string;
@@ -72,24 +77,24 @@ export default function NewProject() {
     submitButton: string;
     projectTitle: string;
     projectCode: string;
-    projectSector: string;
+    // projectSector: string;
     description: string;
     startDate: string;
     endDate: string;
     projectArea: string;
-    measurementUnits: string;
+    // measurementUnits: string;
     budget: string;
     currency: string;
     location: string;
     mapLink: string;
     submit: string;
-    thumbnail: { title: string; add: string };
-    assignees: { title: string; add: string };
-    attachments: {
-      addLabel: string;
-      addButton: string;
-      types: Record<string, string>;
-    };
+    // thumbnail: { title: string; add: string };
+    // assignees: { title: string; add: string };
+    // attachments: {
+    //   addLabel: string;
+    //   addButton: string;
+    //   types: Record<string, string>;
+    // };
   };
 
   const [startDate, setStartDate] = useState(new Date());
@@ -231,6 +236,60 @@ export default function NewProject() {
   const removeAttachment = (id: string) => {
     setAttachments(attachments.filter((a) => a.id !== id));
   };
+  
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState<ProjectCreateRequest>({
+    ProjectName: "",
+    ProjectAdminIDs: [],
+    ProjectDescription: "",
+    ProjectCode: "",
+    ProjectArea: "",
+    StartDate: "",
+    EndDate: "",
+    Budget: 0,
+    Currency: "",
+    ProjectLocation: "",
+    ProjectMapLink: "",
+    ProjectThumbnail: "",
+  });
+  // In your component
+const handleInputChange = (field: keyof ProjectCreateRequest, value: any) => {
+  setFormData((prev) => {
+    const newData = {
+      ...prev,
+      [field]: field === "Budget" ? parseFloat(value) : value,
+    };
+    console.log("Current form state:", newData); // Add logging
+    return newData;
+  });
+};
+
+// In your form component
+const handleSubmit = async () => {
+  try {
+    console.log("[FORM] Submission started");
+    console.log("[FORM] Sending payload:", formData);
+
+    // Add loading state
+    setSubmitting(true);
+    
+    const response = await createProject(formData);
+    
+    console.log("[FORM] API Response:", response);
+    
+    // Handle success
+    router.back();
+    Alert.alert("Success", "Project created successfully!");
+    
+  } catch (error) {
+    console.error("[FORM] Submission error:", error);
+    Alert.alert("Error", "Failed to create project");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -242,6 +301,7 @@ export default function NewProject() {
               style={styles.input}
               placeholder={t.projectTitle || "Enter project name"}
               placeholderTextColor="#8C8C8C"
+              
             />
             <Feather name="map" size={18} color="#8C8C8C" />
           </View>
@@ -253,12 +313,13 @@ export default function NewProject() {
               style={styles.input}
               placeholder={t.projectCode}
               placeholderTextColor="#8C8C8C"
+              
             />
             <Feather name="hash" size={18} color="#8C8C8C" />
           </View>
         </View>
 
-        <View style={styles.inputContainer}>
+        {/* <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
@@ -267,7 +328,7 @@ export default function NewProject() {
             />
             <FontAwesome5 name="arrows-alt" size={18} color="#8C8C8C" />
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
@@ -277,6 +338,7 @@ export default function NewProject() {
               placeholderTextColor="#8C8C8C"
               multiline
               numberOfLines={4}
+              
             />
             <Feather name="book" size={18} color="#8C8C8C" />
           </View>
@@ -330,6 +392,7 @@ export default function NewProject() {
               style={styles.input}
               placeholder={t.projectArea}
               placeholderTextColor="#8C8C8C"
+              
             />
             <Ionicons name="scan" size={18} color="#8C8C8C" />
           </View>
@@ -357,14 +420,14 @@ export default function NewProject() {
               })
             }
           >
-            <TextInput
+            {/* <TextInput
               style={styles.input}
               placeholder={t.measurementUnits}
               placeholderTextColor="#8C8C8C"
               value={measurementUnit}
               editable={false}
-            />
-            <Animated.View
+            /> */}
+            {/* <Animated.View
               style={{
                 transform: [
                   {
@@ -382,10 +445,10 @@ export default function NewProject() {
                 color="gray"
                 style={styles.icon}
               />
-            </Animated.View>
+            </Animated.View> */}
           </TouchableOpacity>
 
-          <Animated.View
+          {/* <Animated.View
             style={[
               styles.dropdown,
               {
@@ -412,7 +475,7 @@ export default function NewProject() {
                 <Text style={styles.dropdownItem}>{option.label}</Text>
               </TouchableOpacity>
             ))}
-          </Animated.View>
+          </Animated.View> */}
         </View>
 
         <View style={styles.inputContainer}>
@@ -422,6 +485,7 @@ export default function NewProject() {
               placeholder={t.budget}
               placeholderTextColor="#8C8C8C"
               keyboardType="numeric"
+              
             />
             <Ionicons name="cash-outline" size={20} color="#8C8C8C" />
           </View>
@@ -521,7 +585,7 @@ export default function NewProject() {
           </View>
         </View>
 
-        <View style={styles.uploadSection}>
+        {/* <View style={styles.uploadSection}>
           <View style={styles.uploadHeader}>
             <Ionicons name="image-outline" size={20} color="#8C8C8C" />
             <Text style={styles.uploadTitle}>{t.thumbnail.title}</Text>
@@ -529,9 +593,9 @@ export default function NewProject() {
               <Text style={styles.addButton}>{t.thumbnail.add}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
-        <View style={styles.assigneesSection}>
+        {/* <View style={styles.assigneesSection}>
           <View style={styles.uploadHeader}>
             <Ionicons name="people-outline" size={20} color="#8C8C8C" />
             <Text style={styles.uploadTitle}>{t.assignees.title}</Text>
@@ -539,7 +603,7 @@ export default function NewProject() {
               <Text style={styles.addButton}>{t.assignees.add}</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
         <View style={styles.chipContainer}>
           {assignees.map((assignee) => (
             <View key={assignee.id} style={styles.chip}>
@@ -556,20 +620,20 @@ export default function NewProject() {
             onPress={handleOpenFilePicker}
             style={styles.addPeopleContainer}
           >
-            <View style={styles.addPeopleLeft}>
+            {/* <View style={styles.addPeopleLeft}>
               <Ionicons name="document-outline" size={20} color="#8C8C8C" />
               <Text style={styles.addPeopleText}>
                 {newAttachment || t.attachments?.addLabel || "Add Attachment"}
               </Text>
-            </View>
-            <TouchableOpacity onPress={handleAddAttachment}>
+            </View> */}
+            {/* <TouchableOpacity onPress={handleAddAttachment}>
               <Text style={styles.addButtonText}>
                 {t.attachments?.addButton || "Add"}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </TouchableOpacity>
         </View>
-        <View style={styles.chipsContainer}>
+        {/* <View style={styles.chipsContainer}>
           {attachments.map((attachment, index) => (
             <View key={index} style={styles.chip}>
               <Text style={styles.chipText}>
@@ -580,9 +644,9 @@ export default function NewProject() {
               </TouchableOpacity>
             </View>
           ))}
-        </View>
+        </View> */}
 
-        <TouchableOpacity style={styles.submitButton}>
+        <TouchableOpacity  onPress={handleSubmit} style={styles.submitButton}>
           <Text style={styles.submitButtonText}>
             {t.submitButton || "Submit"}
           </Text>

@@ -18,6 +18,7 @@ import { MeetingResponse, TaskResponse } from "@/types/Apitypes";
 import { useAuthStore } from "@/store/authStore";
 import { getUserMeetings } from "@/services/meetings";
 import { getTasks } from "@/services/task";
+import { markTaskAsComplete } from "@/services/task";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -175,8 +176,36 @@ const UpcomingActivities: React.FC = () => {
     { id: "5", title: "Task 5", completed: true },
   ];
 
+  interface MarkTaskCompletePayload {
+    ProjectID: string;
+    TaskID: string;
+    Notes: string;
+  }
+
   const toggleTaskCompletion = (id: string) => {
     console.log("Toggle Task Completion:", id);
+    try {
+      // You'll need to get the ProjectID for the current task
+      // This could come from the task item itself, component props, or context
+      const projectId = item.ProjectID; // Replace with how you're getting the projectId
+      
+      // You might want to get notes from user input or set a default
+      const notes = "Task completed"; // Replace with user input if needed
+      
+      const completeData: MarkTaskCompletePayload = {
+        ProjectID: projectId,
+        TaskID: taskId,
+        Notes: notes
+      };
+      const response = await markTaskAsComplete(completeData);
+    
+      console.log("Task marked as complete:", response);
+      console.log("Success", "Task marked as complete!");
+    
+  } catch (error: any) {
+    console.error("Error marking task as complete:", error);
+    console.log("Error", error.message || "Failed to mark task as complete.");
+  }
   };
 
   const renderMeetingItem = ({ item }: { item: (typeof meetingsData)[0] }) => (

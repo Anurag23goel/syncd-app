@@ -23,6 +23,12 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import {createTeamTask} from "@/services/task/index";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CreateTeamTaskPayload, Priority } from "@/types/Apitypes";
+import { useAuthStore } from "@/store/authStore";
+import { ProjectDetailsResponse, SingleProjectDetails } from "@/types/Apitypes";
+import { getTeamsByProjectId } from "@/services/meetings/search";
 
 interface TaskModalProps {
   isVisible: boolean;
@@ -47,6 +53,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isVisible, onClose }) => {
   >([]);
   const [newAttachment, setNewAttachment] = useState<string>(""); // For displaying the selected file name in input
   const [entireTeam, setEntireTeam] = useState(false);
+  const [creatorNotes, setCreatorNotes] = useState<string>("");
   const [selectedPeople, setSelectedPeople] = useState([
     "Person 1",
     "Person 2",
@@ -152,18 +159,46 @@ const TaskModal: React.FC<TaskModalProps> = ({ isVisible, onClose }) => {
     setSelectedPeople((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleCreateTask = () => {
-    console.log("Task created:", {
-      title,
-      description,
-      projectName,
-      startDate,
-      endDate,
-      attachments,
-      selectedPriority,
-    });
-    onClose();
+  const handleCreateTask = async () => {
+    if (!title || !description || !projectName || !selectedPriority) {
+      Alert.alert("Error", "All required fields must be filled!");
+      return;
+    }
+    // Get user ID from storage
+    const userId = await AsyncStorage.getItem('userId') || "default-user";
+    const projectId = useAuthStore.getState().projectID;
+    if (!projectId) {
+      Alert.alert("Error", "No project ID found.");
+      return;
+    }
+    
+    const teamTaskData: CreateTeamTaskPayload = {
+      Title: title,
+      Description: description,
+      StartDate: startDate ? startDate.toISOString().split("T")[0] : "",
+      EndDate: endDate ? endDate.toISOString().split("T")[0] : "",
+      Priority: selectedPriority, // Add this
+      ProjectID: projectId,
+      CreatorNotes: creatorNotes || "",
+      AssignmentType: "USER", // Default to USER as per your example
+      AssignedUserID: userId || undefined,
+    };
+    
+    try {
+      console.log("Sending team task data:", teamTaskData);
+      const response = await createTeamTask(teamTaskData);
+      console.log("Team task created successfully:", response);
+      Alert.alert("Success", "Team task created successfully!");
+      onClose(); // Close modal after success
+    } catch (error: any) {
+      console.error("Error creating team task:", error);
+      Alert.alert("Error", error.message || "Failed to create task.");
+    }
   };
+
+
+
+
 
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = {
