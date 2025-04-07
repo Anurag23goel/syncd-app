@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {
   Modal,
   View,
@@ -12,10 +12,19 @@ import { LocalSvg } from "react-native-svg/css";
 import { moderateScale } from "@/utils/spacing";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
+import { useAuthStore } from "@/store/authStore";
+import { createMilestone } from "@/services/project_user/milestone";
 
 interface AddMilestoneModalProps {
   visible: boolean;
   onClose: () => void;
+}
+
+export interface createMilestonePayload{
+  ProjectID: string;
+  Title:string;
+  Description: string;
+  Status: string;
 }
 
 export default function AddMilestoneModal({
@@ -23,7 +32,56 @@ export default function AddMilestoneModal({
   onClose,
 }: AddMilestoneModalProps) {
   const language = useLanguageStore((state) => state.language);
-  const t = translations[language].tabs.paymentLog.milestone;
+  const t = translations[language].tabs.paymentLog.milestone
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("PENDING"); // Default status
+  const [isLoading, setIsLoading] = useState(false);
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setStatus("PENDING");
+  };
+
+  const handleSubmit = async () => {
+    console.log("Submit button clicked"); // Debugging
+
+    if (!title || !description) {
+      console.log("Error", "Please fill all required fields");
+      return;
+    }
+
+    const projectId = useAuthStore.getState().projectID;
+    if (!projectId) {
+      console.log("Error", "No project ID found.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const milestoneData: createMilestonePayload = {
+        ProjectID: projectId,
+        Title: title,
+        Description: description,
+        Status: status,
+      };
+      console.log("Sending milestone data:", milestoneData);
+      const response = await createMilestone(milestoneData);
+      console.log("Milestone created successfully:", response);
+      
+      console.log("Success", "Milestone added successfully!");
+      resetForm();
+      onClose();
+    } catch (error: any) {
+      console.error("Error creating milestone:", error);
+      console.log("Error", error.message || "Failed to add milestone");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Modal
@@ -90,7 +148,7 @@ export default function AddMilestoneModal({
             </View>
           </View>
 
-          <TouchableOpacity style={styles.saveButton} onPress={onClose}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
             <Text style={styles.saveButtonText}>{t.save}</Text>
           </TouchableOpacity>
         </View>

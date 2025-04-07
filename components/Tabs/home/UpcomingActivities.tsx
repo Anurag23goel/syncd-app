@@ -151,7 +151,7 @@ const UpcomingActivities: React.FC = () => {
   useEffect(() => {
     const fetchMeetingsData = async () => {
       const authToken = useAuthStore.getState().token;
-
+      console.log("Auth token:", authToken);
       if (!authToken) {
         console.error("No auth token found!");
         return;
@@ -159,11 +159,18 @@ const UpcomingActivities: React.FC = () => {
 
       try {
         const response = await getUserMeetings(authToken);
+        console.log("API response:", response);
 
-        setMeetingsData(response.data?.data);
+        if (response && response.data) {
+          console.log("Meetings data received:", response.data.data);
+          setMeetingsData(response.data.data); // Adjust this based on actual data shape
+        } else {
+          console.error("Failed to fetch meetings:", response.message || "Unknown error");
+        }
       } catch (error) {
-        console.error("Error fetching meetings:", error);
+        console.error("Error while fetching meetings:", error);
       }
+      
     };
     fetchMeetingsData();
   },[]);
@@ -209,28 +216,6 @@ const UpcomingActivities: React.FC = () => {
 
   const toggleTaskCompletion = (id: string) => {
     console.log("Toggle Task Completion:", id);
-    try {
-      // You'll need to get the ProjectID for the current task
-      // This could come from the task item itself, component props, or context
-      const projectId = item.ProjectID; // Replace with how you're getting the projectId
-      
-      // You might want to get notes from user input or set a default
-      const notes = "Task completed"; // Replace with user input if needed
-      
-      const completeData: MarkTaskCompletePayload = {
-        ProjectID: projectId,
-        TaskID: taskId,
-        Notes: notes
-      };
-      const response = await markTaskAsComplete(completeData);
-    
-      console.log("Task marked as complete:", response);
-      console.log("Success", "Task marked as complete!");
-    
-  } catch (error: any) {
-    console.error("Error marking task as complete:", error);
-    console.log("Error", error.message || "Failed to mark task as complete.");
-  }
   };
 
   const renderMeetingItem = ({ item }: { item: (typeof meetingsData)[0] }) => (
