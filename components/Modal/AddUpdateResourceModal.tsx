@@ -10,6 +10,7 @@ import {
   Animated,
   ScrollView,
   Platform,
+  Alert
 } from "react-native";
 import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LocalSvg } from "react-native-svg/css";
@@ -121,7 +122,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
   const handleSubmit = () => {
     // Basic validation
     if (!formData.itemName || !formData.totalQuantity || !formData.cost) {
-      alert(t.validationError || "Please fill in all required fields.");
+      Alert.alert("Please fill in all required fields.");
       return;
     }
     onSubmit(formData);
@@ -200,7 +201,7 @@ const AddUpdateResourceModal: React.FC<AddUpdateResourceModalProps> = ({
         style={styles.modalContainer}
       >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{title || t.title}</Text>
+          {/* <Text style={styles.modalTitle}>{title || t.title}</Text> */}
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             <View style={styles.inputContainer}>
               <TextInput

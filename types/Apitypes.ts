@@ -981,7 +981,7 @@ export interface MeetingResponse {
  * Type for listing meetings
  */
 export interface MeetingsListResponse {
-  meetings: MeetingResponse[];
+  data: MeetingResponse[];
 }
 
 
@@ -1039,3 +1039,5 @@ export interface UploadFilePayload {
   FolderID: string;
   Files: File[];
 }
+
+

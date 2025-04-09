@@ -151,7 +151,7 @@ const UpcomingActivities: React.FC = () => {
   useEffect(() => {
     const fetchMeetingsData = async () => {
       const authToken = useAuthStore.getState().token;
-
+      console.log("Auth token:", authToken);
       if (!authToken) {
         console.error("No auth token found!");
         return;
@@ -159,11 +159,16 @@ const UpcomingActivities: React.FC = () => {
 
       try {
         const response = await getUserMeetings(authToken);
-
-        setMeetingsData(response.data?.data);
+        
+        if (response && response.data) {
+          setMeetingsData(response.data.data); // Adjust this based on actual data shape
+        } else {
+          console.error("Failed to fetch meetings:", response.message || "Unknown error");
+        }
       } catch (error) {
-        console.error("Error fetching meetings:", error);
+        console.error("Error while fetching meetings:", error);
       }
+      
     };
     fetchMeetingsData();
   }, []);
@@ -182,6 +187,7 @@ const UpcomingActivities: React.FC = () => {
     Notes: string;
   }
 
+<<<<<<< HEAD
   // const toggleTaskCompletion = (id: string) => {
   //   console.log("Toggle Task Completion:", id);
   //   try {
@@ -207,6 +213,11 @@ const UpcomingActivities: React.FC = () => {
   //   console.log("Error", error.message || "Failed to mark task as complete.");
   // }
   // };
+=======
+  const toggleTaskCompletion = (id: string) => {
+    console.log("Toggle Task Completion:", id);
+  };
+>>>>>>> arya
 
   const renderMeetingItem = ({ item }: { item: (typeof meetingsData)[0] }) => (
     <ActivityCard

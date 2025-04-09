@@ -23,6 +23,8 @@ import { getProjectDetails } from "@/services/project_user/basic";
 import { useStore } from "zustand";
 import { useAuthStore } from "@/store/authStore";
 
+const budgetDetails = 50000; 
+
 const Id = () => {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog;
@@ -110,7 +112,7 @@ const Id = () => {
 
   const renderItem = ({ item }: { item: { key: string } }) => {
     if (item.key === "budget") {
-      return <BudgetScreen />;
+      return <BudgetScreen budgetDetails={budgetDetails}/>;
     } else if (item.key === "filter") {
       return (
         <View style={styles.filterContainer}>
@@ -186,6 +188,7 @@ const Id = () => {
       <AddExpenseModal
         visible={isExpenseModalVisible}
         onClose={() => setIsExpenseModalVisible(false)}
+        projectId={projectID} // Pass the project ID to the modal
       />
     </SafeAreaView>
   );
