@@ -45,6 +45,12 @@ export default function AddMilestoneModal({
     setStatus("PENDING");
   };
 
+  // const authState = useAuthStore.getState();
+  // console.log("Auth store state:", authState); // Log the entire state to see its structure
+    
+  // const storeProjectId = authState.projectID || authState.currentProjectId || authState.selectedProjectId;
+  // console.log("Project ID from store:", storeProjectId);
+    
   const handleSubmit = async () => {
     console.log("Submit button clicked"); // Debugging
 

@@ -159,10 +159,8 @@ const UpcomingActivities: React.FC = () => {
 
       try {
         const response = await getUserMeetings(authToken);
-        console.log("API response:", response);
-
+        
         if (response && response.data) {
-          console.log("Meetings data received:", response.data.data);
           setMeetingsData(response.data.data); // Adjust this based on actual data shape
         } else {
           console.error("Failed to fetch meetings:", response.message || "Unknown error");

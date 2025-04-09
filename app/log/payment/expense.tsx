@@ -50,6 +50,8 @@ export default function ExpenseDetails() {
             <Text style={styles.amount}>- ₹10,00,000</Text>
           </View>
         </View>
+
+
       </ScrollView>
     </SafeAreaView>
   );

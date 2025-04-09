@@ -1039,3 +1039,5 @@ export interface UploadFilePayload {
   FolderID: string;
   Files: File[];
 }
+
+

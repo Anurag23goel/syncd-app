@@ -18,11 +18,12 @@ import { translations } from "@/constants/translations";
 import { getAllUserProjects } from "@/services/project_other_user";
 import { useAuthStore } from "@/store/authStore";
 import { ProjectDetailsResponse } from "@/types/Apitypes";
+import { SINGLE_PROJECT_DETAILS } from "@/types/NewApiTypes";
 
 interface InventoryCardProps {
   imgSrc: string;
   title: string;
-  location: string;
+  location: string | null;
   handleClick: () => void;
   IsCompleted?: boolean; // New prop to check if it's in the Completed tab
 }
@@ -136,7 +137,7 @@ const ProjectScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Active");
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs;
-  const [projects, setAllProjects] = useState<ProjectDetailsResponse[] | null>(
+  const [projects, setAllProjects] = useState<SINGLE_PROJECT_DETAILS[] | null>(
     []
   );
 

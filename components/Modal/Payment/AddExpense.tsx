@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   View,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { AntDesign, FontAwesome, Feather } from "@expo/vector-icons";
 import { moderateScale } from "@/utils/spacing";
@@ -13,37 +14,50 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 import { translations } from "@/constants/translations";
 import { createPayment } from "@/services/project_user/payment_logs";
 import { useAuthStore } from "@/store/authStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CreatePaymentPayload } from "@/types/Apitypes";
 
 interface AddExpenseModalProps {
   visible: boolean;
   onClose: () => void;
+  projectId?: string; // Add this prop
 }
 
-interface CreatePaymentPayload{
-  ProjectID: string;
-  Amount: number;
-  Title: string;
-  EnterDetails: string;
-  Category: string;
-  PaymentMode: string;
-  InvoiceLink?: string;
-}
 export default function AddExpenseModal({
   visible,
   onClose,
+  projectId: externalProjectId, // Receive from props
 }: AddExpenseModalProps) {
   const language = useLanguageStore((state) => state.language);
   const t = translations[language].tabs.paymentLog.addExpense;
-  const currentProject =  useAuthStore.getState().projectID;
   
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [details, setDetails] = useState("");
   const [category, setCategory] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+  const [invoice, setInvoice] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  
+  // Get project ID from props first, fallback to store
+  const [localProjectId, setLocalProjectId] = useState<string | null>(null);
+  
+  // Update local project ID when modal becomes visible
+  useEffect(() => {
+   
+    const checkIds = async () => {
+      const userId = await AsyncStorage.getItem('userId') || "default-user";
+      const projectId = useAuthStore.getState().projectID;
+      const token = useAuthStore.getState().token;
+      
+      console.log("DEBUGGING AUTH STATE:");
+      console.log("UserID from AsyncStorage:", userId);
+      console.log("ProjectID from store:", projectId);
+      console.log("Auth Token:", token);
+    };
+    
+    checkIds();
+  }, [visible, externalProjectId]);
   
   const resetForm = () => {
     setTitle("");
@@ -51,51 +65,50 @@ export default function AddExpenseModal({
     setDetails("");
     setCategory("");
     setPaymentMode("");
-    setInvoiceFile(null);
+    setInvoice("");
   };
 
   const handleSubmit = async () => {
     console.log("Submit button clicked");
-    if (!title || !amount || !details ) {
-      console.log("Error", "Please fill all required fields");
+    console.log("Using project ID:", localProjectId);
+    
+    if (!title || !amount || !details) {
+      Alert.alert("Error", "Please fill all required fields");
       return;
     }
-
-    if (!currentProject) {
-      console.log("Error", "No project selected");
+    
+    if (!localProjectId) {
+      Alert.alert("Error", "No project ID found.");
       return;
     }
-
-    setIsLoading(true);
     
     try {
-      let invoiceLink = "";
-      
+      setIsLoading(true);
       
       const paymentData: CreatePaymentPayload = {
-        ProjectID: currentProject,
-        Amount: parseFloat(amount),
+        ProjectID: localProjectId,
         Title: title,
-        EnterDetails: details,
+        Amount: parseFloat(amount),
+        EnterDetails: details, 
         Category: category,
         PaymentMode: paymentMode,
-        InvoiceLink: invoiceLink || undefined
+        InvoiceLink: invoice 
       };
       
-     
-      console.log("Payment created successfully:");
       
-      console.log("Success", "Expense added successfully!");
+      const response = await createPayment(paymentData);
+      console.log("Payment created:", response);
+      
+      Alert.alert("Success", "Payment added successfully");
       resetForm();
       onClose();
-    } catch (error: any) {
+    } catch (error:any) {
       console.error("Error creating payment:", error);
-      console.log("Error", error.message || "Failed to add expense");
+      Alert.alert("Error", error.message || "Failed to create payment");
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <Modal
@@ -125,6 +138,8 @@ export default function AddExpenseModal({
                 placeholderTextColor="#8C8C8C"
                 keyboardType="numeric"
                 style={styles.textInput}
+                value={amount}
+                onChangeText={setAmount}
               />
             </View>
 
@@ -134,6 +149,8 @@ export default function AddExpenseModal({
                 placeholder={t.enterTitle}
                 placeholderTextColor="#8C8C8C"
                 style={styles.textInput}
+                value={title}
+                onChangeText={setTitle}
               />
             </View>
 
@@ -148,6 +165,8 @@ export default function AddExpenseModal({
                 placeholderTextColor="#8C8C8C"
                 multiline
                 style={styles.textInput}
+                value={details}
+                onChangeText={setDetails}
               />
             </View>
 
@@ -164,7 +183,7 @@ export default function AddExpenseModal({
               />
             </View>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.input, { paddingVertical: moderateScale(12) }]}
             >
               <Feather name="grid" size={moderateScale(16)} color="#8C8C8C" />
@@ -175,9 +194,9 @@ export default function AddExpenseModal({
                 color="#8C8C8C"
                 style={styles.dropdownIcon}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.input, { paddingVertical: moderateScale(12) }]}
             >
               <Feather
@@ -192,7 +211,33 @@ export default function AddExpenseModal({
                 color="#8C8C8C"
                 style={styles.dropdownIcon}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+
+<View style={[styles.input, { paddingVertical: moderateScale(12) }]}>
+  <Feather name="grid" size={moderateScale(16)} color="#8C8C8C" />
+  <TextInput
+    placeholder={t.category}
+    placeholderTextColor="#8C8C8C"
+    style={styles.textInput}
+    value={category}
+    onChangeText={setCategory}
+  />
+</View>
+
+<View style={[styles.input, { paddingVertical: moderateScale(12) }]}>
+  <Feather
+    name="credit-card"
+    size={moderateScale(16)}
+    color="#8C8C8C"
+  />
+  <TextInput
+    placeholder={t.paymentMode}
+    placeholderTextColor="#8C8C8C"
+    style={styles.textInput}
+    value={paymentMode}
+    onChangeText={setPaymentMode}
+  />
+</View>
 
             <View
               style={[
@@ -203,7 +248,7 @@ export default function AddExpenseModal({
                 },
               ]}
             >
-              <TouchableOpacity style={styles.invoiceButton}>
+              {/* <TouchableOpacity style={styles.invoiceButton}>
                 <Feather
                   name="paperclip"
                   size={moderateScale(16)}
@@ -213,11 +258,25 @@ export default function AddExpenseModal({
               </TouchableOpacity>
               <TouchableOpacity>
                 <Text style={styles.addLink}>{t.add}</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+              <View style={styles.input}>
+  <Feather
+    name="paperclip"
+    size={moderateScale(16)}
+    color="#8C8C8C"
+  />
+  <TextInput
+    placeholder={t.addInvoice}
+    placeholderTextColor="#8C8C8C"
+    style={styles.textInput}
+    value={invoice}
+    onChangeText={setInvoice}
+  />
+</View>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.addButton}   onPress={handleSubmit}>
+          <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
             <Text style={styles.addButtonText}>{t.add}</Text>
           </TouchableOpacity>
         </View>
